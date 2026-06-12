@@ -1,0 +1,105 @@
+_schema-version: '3.1'
+ID: fiori-viaticos-app
+version: 1.0.0
+description: "Gestión de Viáticos - SAP Fiori Application"
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npm run build:mta
+
+modules:
+  - name: fiori-viaticos-app-destination-content
+    type: com.sap.application.content
+    build-parameters:
+      no-source: true
+    requires:
+      - name: fiori-viaticos-app-destination-service
+        parameters:
+          content-target: true
+      - name: fiori-viaticos-app-repo-host
+        parameters:
+          service-key:
+            name: fiori-viaticos-app-repo-host-key
+      - name: fiori-viaticos-app-xsuaa
+        parameters:
+          service-key:
+            name: fiori-viaticos-app-xsuaa-key
+    parameters:
+      content:
+        instance:
+          destinations:
+            - Name: fiori_viaticos_app_html5_repo_host
+              ServiceInstanceName: fiori-viaticos-app-html5-srv
+              ServiceKeyName: fiori-viaticos-app-repo-host-key
+              sap.cloud.service: fiori.viaticos.app
+            - Authentication: OAuth2UserTokenExchange
+              Name: fiori_viaticos_app_xsuaa
+              ServiceInstanceName: fiori-viaticos-app-xsuaa
+              ServiceKeyName: fiori-viaticos-app-xsuaa-key
+              sap.cloud.service: fiori.viaticos.app
+          existing_destinations_policy: ignore
+
+  - name: fiori-viaticos-app-app-content
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: fiori-viaticos-app-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts:
+            - comccbviaticos.zip
+          name: comccbviaticos
+          target-path: resources/
+
+  - name: comccbviaticos
+    type: html5
+    path: .
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build:mta
+      supported-platforms: []
+    properties:
+      SAP_CLOUD_SERVICE: fiori.viaticos.app
+    requires:
+      - name: fiori-viaticos-app-destination-service
+
+resources:
+  - name: fiori-viaticos-app-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: ignore
+        version: 1.0.0
+      service: destination
+      service-name: fiori-viaticos-app-destination-service
+      service-plan: lite
+
+  - name: fiori-viaticos-app-xsuaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      path: ./xs-security.json
+      service: xsuaa
+      service-name: fiori-viaticos-app-xsuaa
+      service-plan: application
+
+  - name: fiori-viaticos-app-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-name: fiori-viaticos-app-html5-srv
+      service-plan: app-host

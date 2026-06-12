@@ -1,0 +1,54 @@
+{
+  "xsappname": "fiori-viaticos-app",
+  "tenant-mode": "dedicated",
+  "description": "Security profile for Fiori Viaticos App",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.User",
+      "description": "User access to expense management"
+    },
+    {
+      "name": "$XSAPPNAME.Analyst",
+      "description": "Financial analyst access to expense approval"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "ViaticosUser",
+      "description": "Empleado corporativo con acceso a registro de gastos de viaje",
+      "scope-references": [
+        "$XSAPPNAME.User"
+      ]
+    },
+    {
+      "name": "ViaticosAnalyst",
+      "description": "Analista financiero con acceso a aprobación de gastos de viaje",
+      "scope-references": [
+        "$XSAPPNAME.User",
+        "$XSAPPNAME.Analyst"
+      ]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "ViaticosEmpleado",
+      "description": "Empleados que pueden registrar gastos de viaje",
+      "role-template-references": [
+        "$XSAPPNAME.ViaticosUser"
+      ]
+    },
+    {
+      "name": "ViaticosAnalistaFinanciero",
+      "description": "Analistas financieros que pueden aprobar gastos de viaje",
+      "role-template-references": [
+        "$XSAPPNAME.ViaticosAnalyst"
+      ]
+    }
+  ],
+  "oauth2-configuration": {
+    "redirect-uris": [
+      "https://*.cfapps.us10-001.hana.ondemand.com/**",
+      "https://*.hana.ondemand.com/**"
+    ]
+  }
+}

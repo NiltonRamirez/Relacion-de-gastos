@@ -1,0 +1,17 @@
+---
+applications:
+- name: fiori-viaticos-app
+  path: webapp
+  memory: 256M
+  buildpack: https://github.com/cloudfoundry/staticfile-buildpack.git
+  env:
+    destinations: >
+      [
+        {
+          "name": "dest_int_s",
+          "url": "https://<tu-tenant-cpi>.cfapps.<region>.hana.ondemand.com",
+          "forwardAuthToken": false
+        }
+      ]
+  services:
+    - xsuaa-service
