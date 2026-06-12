@@ -124,12 +124,12 @@
         },
         {
           "name": "RouteRevisionDatos",
-          "pattern": "revision/{jobId}",
+          "pattern": "revision/{jobIds}",
           "target": ["TargetRevisionDatos"]
         },
         {
           "name": "RouteConfirmacion",
-          "pattern": "confirmacion/{transaccionId}",
+          "pattern": "confirmacion/{transaccionIds}",
           "target": ["TargetConfirmacion"]
         },
         {

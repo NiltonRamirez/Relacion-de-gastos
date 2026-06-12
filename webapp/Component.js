@@ -41,8 +41,8 @@ sap.ui.define([
             });
             this.setModel(oAppModel, "app");
 
-            // Modelo "gasto": estructura del gasto en proceso de captura/revisión
-            this.setModel(new JSONModel(GastoModel.crearGastoVacio()), "gasto");
+            // Modelo "gasto": lote de facturas en proceso de captura/revisión
+            this.setModel(new JSONModel(GastoModel.crearLoteVacio()), "gasto");
 
             // Modelo "" (default): listas, filtros y datos generales de vistas
             this.setModel(new JSONModel({}));

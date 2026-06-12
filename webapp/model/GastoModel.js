@@ -54,8 +54,22 @@ sap.ui.define([
         PORCENTAJE_IVA: 0.19,
 
         /**
+         * Devuelve la estructura inicial del modelo "gasto": un lote vacío
+         * de facturas, usado mientras el usuario captura/carga uno o varios
+         * documentos antes de pasar a la Vista 5
+         * @returns {object} estructura inicial del lote
+         */
+        crearLoteVacio: function () {
+            return {
+                facturas: [],
+                indiceActual: 0
+            };
+        },
+
+        /**
          * Devuelve un objeto de gasto vacío con la estructura completa
-         * usada en la Vista 5 (Revisión de datos)
+         * usada en la Vista 5 (Revisión de datos). Cada elemento del
+         * arreglo "facturas" del modelo "gasto" tiene esta forma.
          * @returns {object} estructura inicial del gasto
          */
         crearGastoVacio: function () {

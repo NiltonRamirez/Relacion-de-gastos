@@ -13,34 +13,40 @@
                 <!-- Ícono de éxito -->
                 <core:Icon src="sap-icon://message-success" size="4rem" class="confirmacionIcono sapUiMediumMarginBottom"/>
 
-                <Title text="{i18n>confirmacionMensaje}" level="H2" textAlign="Center" class="sapUiSmallMarginBottom"/>
+                <Title text="{= ${i18n>confirmacionMensaje}.replace('{0}', ${vm>/gastos}.length) }" level="H2" textAlign="Center" class="sapUiSmallMarginBottom"/>
 
-                <!-- Número de transacción (formato BTP-TV-YYYY-XXXXXXX) -->
-                <ObjectStatus
-                    title="{i18n>confirmacionNumeroTransaccion}"
-                    text="{vm>/numeroTransaccion}"
-                    state="Success"
-                    class="sapUiMediumMarginBottom"/>
-
-                <!-- Resumen compacto del gasto registrado -->
+                <!-- Resumen de cada gasto registrado -->
                 <Panel headerText="{i18n>confirmacionResumenTitulo}" width="100%" class="sapUiMediumMarginBottom">
-                    <f:SimpleForm editable="false" layout="ResponsiveGridLayout" labelSpanL="5" labelSpanM="5" emptySpanL="0" emptySpanM="0" columnsL="1" columnsM="1">
-                        <f:content>
+                    <List items="{vm>/gastos}">
+                        <CustomListItem>
+                            <VBox class="sapUiSmallMargin">
 
-                            <Label text="{i18n>confirmacionProveedor}"/>
-                            <Text text="{vm>/proveedor}"/>
+                                <ObjectStatus
+                                    title="{i18n>confirmacionNumeroTransaccion}"
+                                    text="{vm>numeroTransaccion}"
+                                    state="Success"
+                                    class="sapUiTinyMarginBottom"/>
 
-                            <Label text="{i18n>confirmacionCategoria}"/>
-                            <Text text="{vm>/categoria}"/>
+                                <f:SimpleForm editable="false" layout="ResponsiveGridLayout" labelSpanL="5" labelSpanM="5" emptySpanL="0" emptySpanM="0" columnsL="1" columnsM="1">
+                                    <f:content>
 
-                            <Label text="{i18n>confirmacionTotal}"/>
-                            <ObjectNumber number="{ path: 'vm>/total', formatter: '.formatter.formatoMonedaCOP' }" emphasized="true"/>
+                                        <Label text="{i18n>confirmacionProveedor}"/>
+                                        <Text text="{vm>proveedor}"/>
 
-                            <Label text="{i18n>confirmacionFecha}"/>
-                            <Text text="{ path: 'vm>/fecha', formatter: '.formatter.formatoFechaCO' }"/>
+                                        <Label text="{i18n>confirmacionCategoria}"/>
+                                        <Text text="{vm>categoria}"/>
 
-                        </f:content>
-                    </f:SimpleForm>
+                                        <Label text="{i18n>confirmacionTotal}"/>
+                                        <ObjectNumber number="{ path: 'vm>total', formatter: '.formatter.formatoMonedaCOP' }" emphasized="true"/>
+
+                                        <Label text="{i18n>confirmacionFecha}"/>
+                                        <Text text="{ path: 'vm>fecha', formatter: '.formatter.formatoFechaCO' }"/>
+
+                                    </f:content>
+                                </f:SimpleForm>
+                            </VBox>
+                        </CustomListItem>
+                    </List>
                 </Panel>
 
                 <!-- ============ BOTONES DE ACCIÓN ============ -->

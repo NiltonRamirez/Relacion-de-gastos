@@ -14,38 +14,38 @@ sap.ui.define([
          * Inicialización de la vista de confirmación de registro
          */
         onInit: function () {
-            this.getView().setModel(new JSONModel({}), "vm");
+            this.getView().setModel(new JSONModel({ gastos: [] }), "vm");
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteConfirmacion").attachPatternMatched(this._onRoutePatternMatched, this);
         },
 
         /**
-         * Carga el resumen del gasto recién registrado (almacenado en el
-         * modelo "" por la Vista 5) y el número de transacción de la ruta
+         * Carga el resumen del lote de gastos recién registrados (almacenado en
+         * el modelo "" por la Vista 5) y los números de transacción de la ruta
          * @private
          */
         _onRoutePatternMatched: function (oEvent) {
-            var sTransaccionId = oEvent.getParameter("arguments").transaccionId;
+            var sTransaccionIds = oEvent.getParameter("arguments").transaccionIds;
             var oModel = this.getOwnerComponent().getModel();
-            var oResumen = oModel.getProperty("/ultimoGastoRegistrado") || {};
+            var aGastos = oModel.getProperty("/gastosRegistrados") || [];
 
-            this.getView().getModel("vm").setData({
-                numeroTransaccion: sTransaccionId || oResumen.numeroTransaccion,
-                proveedor: oResumen.proveedor,
-                categoria: oResumen.categoria,
-                total: oResumen.total,
-                fecha: oResumen.fecha
-            });
+            if (!aGastos.length && sTransaccionIds) {
+                aGastos = sTransaccionIds.split(",").map(function (sTransaccionId) {
+                    return { numeroTransaccion: sTransaccionId };
+                });
+            }
+
+            this.getView().getModel("vm").setProperty("/gastos", aGastos);
         },
 
         /**
-         * Inicia el registro de un nuevo gasto: reinicia el modelo "gasto"
+         * Inicia el registro de un nuevo lote de gastos: reinicia el modelo "gasto"
          * y navega a la selección de método de captura
          */
         onRegistrarOtro: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
-            oGastoModel.setData(GastoModel.crearGastoVacio());
+            oGastoModel.setData(GastoModel.crearLoteVacio());
 
             var oRouter = this.getOwnerComponent().getRouter();
             var oDevice = this.getOwnerComponent().getModel("device");

@@ -8,8 +8,8 @@
         <content>
             <VBox class="sapUiMediumMargin" alignItems="Center">
 
-                <!-- ============ ESTADO: SIN IMAGEN CAPTURADA ============ -->
-                <VBox visible="{= !${vm>/imagenCapturada} &amp;&amp; !${vm>/procesando} }" alignItems="Center">
+                <!-- ============ ESTADO: CÁMARA ACTIVA ============ -->
+                <VBox visible="{= ${vm>/estado} === 'camara' }" alignItems="Center">
                     <Text text="{i18n>capturaInstrucciones}" textAlign="Center" class="sapUiSmallMarginBottom"/>
 
                     <!-- Contenedor del video de la cámara -->
@@ -33,11 +33,13 @@
                         visible="{vm>/errorCamara}"
                         class="sapUiSmallMarginBottom"/>
 
+                    <!-- Permite cancelar la captura y volver a la galería si ya hay facturas -->
+                    <Link text="{i18n>btnCerrar}" press="onCancelarCaptura" visible="{= ${vm>/facturas}.length > 0 }" class="sapUiTinyMarginBottom"/>
                     <Link text="{i18n>btnUsarArchivoInstead}" press="onUsarArchivo"/>
                 </VBox>
 
                 <!-- ============ ESTADO: VISTA PREVIA DE IMAGEN CAPTURADA ============ -->
-                <VBox visible="{= !!${vm>/imagenCapturada} &amp;&amp; !${vm>/procesando} }" alignItems="Center" width="100%">
+                <VBox visible="{= ${vm>/estado} === 'previsualizacion' }" alignItems="Center" width="100%">
                     <Box class="camaraContainer sapUiSmallMarginBottom">
                         <core:HTML id="previewContainer" content="{vm>/htmlPreview}"/>
                     </Box>
@@ -74,11 +76,50 @@
                     </HBox>
                 </VBox>
 
+                <!-- ============ ESTADO: GALERÍA DE FACTURAS CAPTURADAS ============ -->
+                <VBox visible="{= ${vm>/estado} === 'galeria' }" width="100%">
+                    <Title text="{= ${i18n>capturaGaleriaTitulo}.replace('{0}', ${vm>/facturas}.length) }" level="H3" class="sapUiSmallMarginBottom"/>
+
+                    <List items="{vm>/facturas}" class="sapUiSmallMarginBottom">
+                        <CustomListItem>
+                            <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMargin" width="100%">
+                                <HBox alignItems="Center">
+                                    <core:HTML content="{vm>htmlThumbnail}"/>
+                                    <Text text="{vm>nombreArchivo}" class="sapUiTinyMarginBegin"/>
+                                </HBox>
+                                <Button icon="sap-icon://delete" type="Transparent" press="onEliminarFactura"/>
+                            </HBox>
+                        </CustomListItem>
+                    </List>
+
+                    <MessageStrip
+                        text="{i18n>msgMinimoUnaFactura}"
+                        type="Warning"
+                        showIcon="true"
+                        visible="{= ${vm>/facturas}.length === 0 }"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <Button
+                        text="{i18n>btnAgregarOtra}"
+                        icon="sap-icon://add"
+                        press="onAgregarOtra"
+                        width="100%"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <Button
+                        text="{i18n>btnContinuarLote}"
+                        type="Emphasized"
+                        icon="sap-icon://arrow-right"
+                        press="onContinuarLote"
+                        enabled="{= ${vm>/facturas}.length > 0 }"
+                        width="100%"/>
+                </VBox>
+
                 <!-- ============ ESTADO: PROCESANDO OCR ============ -->
-                <VBox visible="{vm>/procesando}" alignItems="Center" justifyContent="Center" class="sapUiLargeMarginTop">
+                <VBox visible="{= ${vm>/estado} === 'procesando' }" alignItems="Center" justifyContent="Center" class="sapUiLargeMarginTop">
                     <BusyIndicator size="3rem" class="sapUiMediumMarginBottom"/>
                     <Title text="{i18n>procesandoFactura}" level="H3" class="sapUiSmallMarginBottom"/>
-                    <Text text="{i18n>procesandoFacturaDesc}" textAlign="Center"/>
+                    <Text text="{= ${i18n>procesandoFacturaDesc}.replace('{0}', ${vm>/facturas}.length) }" textAlign="Center"/>
                 </VBox>
 
                 <!-- Mensaje de error general (API / conexión) -->

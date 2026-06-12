@@ -19,6 +19,8 @@ sap.ui.define([
                 cargando: false,
                 guardando: false,
                 validandoDian: false,
+                indiceActual: 0,
+                totalFacturas: 0,
                 mensajeError: "",
                 mostrarError: false,
                 ciudades: GastoModel.CIUDADES_COLOMBIA
@@ -30,52 +32,66 @@ sap.ui.define([
         },
 
         /**
-         * Al ingresar a la vista, carga los datos extraídos por OCR
-         * correspondientes al jobId recibido en la ruta
+         * Al ingresar a la vista, carga los datos extraídos por OCR del lote
+         * de jobIds (separados por coma) recibido en la ruta
          * @private
          */
         _onRoutePatternMatched: function (oEvent) {
-            var sJobId = oEvent.getParameter("arguments").jobId;
-            this._cargarDatosOcr(sJobId);
+            var sJobIds = oEvent.getParameter("arguments").jobIds;
+            var aJobIds = sJobIds.split(",");
+            this._cargarDatosOcrLote(aJobIds);
         },
 
         /**
-         * Obtiene el resultado del OCR (datos extraídos + niveles de confianza)
-         * y los carga en el modelo "gasto" de la vista
-         * Endpoint: GET /http/api/v1/facturas/ocr/{jobId}
-         * @param {string} sJobId - identificador del job de OCR
+         * Obtiene los resultados del OCR (datos extraídos + niveles de confianza)
+         * de todo el lote y los carga en el modelo "gasto" de la vista
+         * Endpoint: GET /http/api/v1/facturas/ocr/lote?jobIds=...
+         * @param {Array<string>} aJobIds - identificadores de los jobs de OCR
          * @private
          */
-        _cargarDatosOcr: function (sJobId) {
+        _cargarDatosOcrLote: function (aJobIds) {
             var oViewModel = this.getView().getModel("vm");
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
             var oApiService = this.getOwnerComponent().getApiService();
+            var sJobIds = aJobIds.join(",");
 
             oViewModel.setProperty("/cargando", true);
             oViewModel.setProperty("/mostrarError", false);
 
-            oApiService.get("/api/v1/facturas/ocr/" + sJobId)
-                .then(function (oResultado) {
+            oApiService.get("/api/v1/facturas/ocr/lote?jobIds=" + encodeURIComponent(sJobIds))
+                .then(function (oRespuesta) {
                     oViewModel.setProperty("/cargando", false);
 
-                    // Mezclar la estructura base con los datos extraídos del OCR
-                    var oGastoVacio = GastoModel.crearGastoVacio();
-                    var oDatosExtraidos = oResultado.datos || {};
+                    var aResultados = (oRespuesta && oRespuesta.resultados) || [];
+                    var aFacturas = aResultados.map(function (oResultado, iIndice) {
+                        var oGastoVacio = GastoModel.crearGastoVacio();
+                        var oDatosExtraidos = oResultado.datos || {};
 
-                    var oGasto = Object.assign(oGastoVacio, oDatosExtraidos);
-                    oGasto.jobId = sJobId;
-                    oGasto.confianzaOCR = oResultado.confianza || {};
-                    oGasto.cufeSoloLectura = !!oDatosExtraidos.cufe;
+                        var oGasto = Object.assign(oGastoVacio, oDatosExtraidos);
+                        oGasto.jobId = aJobIds[iIndice];
+                        oGasto.confianzaOCR = oResultado.confianza || {};
+                        oGasto.cufeSoloLectura = !!oDatosExtraidos.cufe;
 
-                    // Recalcular IVA y total con los valores extraídos
-                    if (!oGasto.valorIva) {
-                        oGasto.valorIva = GastoModel.calcularIva(oGasto.subtotal);
-                    }
-                    oGasto.total = GastoModel.calcularTotal(oGasto);
+                        // Recalcular IVA y total con los valores extraídos
+                        if (!oGasto.valorIva) {
+                            oGasto.valorIva = GastoModel.calcularIva(oGasto.subtotal);
+                        }
+                        oGasto.total = GastoModel.calcularTotal(oGasto);
 
-                    oGastoModel.setData(oGasto);
+                        var oTope = GastoModel.validarTopeViaticos(oGasto);
+                        oGasto.excedeTope = oTope.excede;
+                        oGasto.topeAplicable = oTope.tope;
 
-                    this._evaluarTopeViaticos();
+                        return oGasto;
+                    });
+
+                    oGastoModel.setProperty("/facturas", aFacturas);
+                    oGastoModel.setProperty("/indiceActual", 0);
+                    oViewModel.setProperty("/indiceActual", 0);
+                    oViewModel.setProperty("/totalFacturas", aFacturas.length);
+
+                    this._enlazarFacturaActual();
+                    this._evaluarTopeViaticosActual();
                 }.bind(this))
                 .catch(function (oError) {
                     oViewModel.setProperty("/cargando", false);
@@ -85,14 +101,67 @@ sap.ui.define([
         },
 
         /**
+         * Enlaza el contenedor "facturaContainer" al elemento del arreglo
+         * "gasto>/facturas" correspondiente al índice actual
+         * @private
+         */
+        _enlazarFacturaActual: function () {
+            var oViewModel = this.getView().getModel("vm");
+            var iIndice = oViewModel.getProperty("/indiceActual");
+
+            this.byId("facturaContainer").bindElement({
+                path: "/facturas/" + iIndice,
+                model: "gasto"
+            });
+        },
+
+        /**
+         * Devuelve la ruta absoluta del modelo "gasto" hacia la factura
+         * que se está revisando actualmente
+         * @returns {string} ruta absoluta (ej. "/facturas/0/")
+         * @private
+         */
+        _rutaFacturaActual: function () {
+            var oViewModel = this.getView().getModel("vm");
+            return "/facturas/" + oViewModel.getProperty("/indiceActual") + "/";
+        },
+
+        /**
+         * Navega a la factura anterior del lote
+         */
+        onFacturaAnterior: function () {
+            var oViewModel = this.getView().getModel("vm");
+            var iIndice = oViewModel.getProperty("/indiceActual");
+            if (iIndice > 0) {
+                oViewModel.setProperty("/indiceActual", iIndice - 1);
+                this.getOwnerComponent().getModel("gasto").setProperty("/indiceActual", iIndice - 1);
+                this._enlazarFacturaActual();
+            }
+        },
+
+        /**
+         * Navega a la siguiente factura del lote
+         */
+        onFacturaSiguiente: function () {
+            var oViewModel = this.getView().getModel("vm");
+            var iIndice = oViewModel.getProperty("/indiceActual");
+            if (iIndice + 1 < oViewModel.getProperty("/totalFacturas")) {
+                oViewModel.setProperty("/indiceActual", iIndice + 1);
+                this.getOwnerComponent().getModel("gasto").setProperty("/indiceActual", iIndice + 1);
+                this._enlazarFacturaActual();
+            }
+        },
+
+        /**
          * Recalcula automáticamente el valor del IVA (19%) cuando cambia el subtotal,
          * y luego recalcula el total general
          */
         onCambioSubtotal: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
-            var fSubtotal = oGastoModel.getProperty("/subtotal");
+            var sRuta = this._rutaFacturaActual();
+            var fSubtotal = oGastoModel.getProperty(sRuta + "subtotal");
 
-            oGastoModel.setProperty("/valorIva", GastoModel.calcularIva(fSubtotal));
+            oGastoModel.setProperty(sRuta + "valorIva", GastoModel.calcularIva(fSubtotal));
             this.onCambioTotales();
         },
 
@@ -102,17 +171,18 @@ sap.ui.define([
          */
         onCambioTotales: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
-            var oGasto = oGastoModel.getData();
+            var sRuta = this._rutaFacturaActual();
+            var oGasto = oGastoModel.getProperty(sRuta);
 
-            oGastoModel.setProperty("/total", GastoModel.calcularTotal(oGasto));
-            this._evaluarTopeViaticos();
+            oGastoModel.setProperty(sRuta + "total", GastoModel.calcularTotal(oGasto));
+            this._evaluarTopeViaticosActual();
         },
 
         /**
          * Se ejecuta al cambiar la categoría del gasto: revalida el tope de viáticos
          */
         onCambioCategoria: function () {
-            this._evaluarTopeViaticos();
+            this._evaluarTopeViaticosActual();
         },
 
         /**
@@ -122,33 +192,34 @@ sap.ui.define([
             var sValor = oEvent.getParameter("value") || "";
             if (sValor.length > 500) {
                 var oGastoModel = this.getOwnerComponent().getModel("gasto");
-                oGastoModel.setProperty("/descripcionConsumo", sValor.substring(0, 500));
+                oGastoModel.setProperty(this._rutaFacturaActual() + "descripcionConsumo", sValor.substring(0, 500));
             }
         },
 
         /**
-         * Verifica si el total actual supera el tope de viáticos configurado
-         * para la categoría del gasto y actualiza el banner de advertencia.
+         * Verifica si el total actual de la factura en revisión supera el tope de
+         * viáticos configurado para su categoría y actualiza el banner de advertencia.
          * Endpoint de referencia: GET /http/api/v1/topes-viaticos
          * @private
          */
-        _evaluarTopeViaticos: function () {
+        _evaluarTopeViaticosActual: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
-            var oGasto = oGastoModel.getData();
             var oApiService = this.getOwnerComponent().getApiService();
+            var sRuta = this._rutaFacturaActual();
+            var oGasto = oGastoModel.getProperty(sRuta);
 
             // Validación local inmediata con los topes de referencia
             var oResultadoLocal = GastoModel.validarTopeViaticos(oGasto);
-            oGastoModel.setProperty("/excedeTope", oResultadoLocal.excede);
-            oGastoModel.setProperty("/topeAplicable", oResultadoLocal.tope);
+            oGastoModel.setProperty(sRuta + "excedeTope", oResultadoLocal.excede);
+            oGastoModel.setProperty(sRuta + "topeAplicable", oResultadoLocal.tope);
 
             // Confirmar contra el backend (los topes oficiales se gestionan en SAP)
             if (oApiService.estaEnLinea()) {
                 oApiService.get("/api/v1/topes-viaticos?categoria=" + encodeURIComponent(oGasto.categoriaGasto))
                     .then(function (oRespuesta) {
                         var fTope = oRespuesta.tope || oResultadoLocal.tope;
-                        oGastoModel.setProperty("/topeAplicable", fTope);
-                        oGastoModel.setProperty("/excedeTope", oGasto.total > fTope);
+                        oGastoModel.setProperty(sRuta + "topeAplicable", fTope);
+                        oGastoModel.setProperty(sRuta + "excedeTope", oGasto.total > fTope);
                     })
                     .catch(function () {
                         // Si falla la consulta, se conserva la validación local
@@ -157,23 +228,24 @@ sap.ui.define([
         },
 
         /**
-         * Valida el NIT del proveedor ante la DIAN
+         * Valida el NIT del proveedor de la factura en revisión ante la DIAN
          * Endpoint: POST /http/api/v1/dian/validar-nit
          */
         onValidarNitDian: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
             var oViewModel = this.getView().getModel("vm");
             var oApiService = this.getOwnerComponent().getApiService();
-            var sNit = oGastoModel.getProperty("/nitProveedor");
-            var sCufe = oGastoModel.getProperty("/cufe");
+            var sRuta = this._rutaFacturaActual();
+            var sNit = oGastoModel.getProperty(sRuta + "nitProveedor");
+            var sCufe = oGastoModel.getProperty(sRuta + "cufe");
 
             if (!sNit) {
                 return;
             }
 
             oViewModel.setProperty("/validandoDian", true);
-            oGastoModel.setProperty("/estadoDian", "pendiente");
-            oGastoModel.setProperty("/detalleDian", this._texto("dianValidando"));
+            oGastoModel.setProperty(sRuta + "estadoDian", "pendiente");
+            oGastoModel.setProperty(sRuta + "detalleDian", this._texto("dianValidando"));
 
             oApiService.post("/api/v1/dian/validar-nit", {
                 nit: sNit,
@@ -182,29 +254,31 @@ sap.ui.define([
                 .then(function (oRespuesta) {
                     oViewModel.setProperty("/validandoDian", false);
                     if (oRespuesta.valido) {
-                        oGastoModel.setProperty("/estadoDian", "valido");
-                        oGastoModel.setProperty("/detalleDian", this._texto("dianValido"));
+                        oGastoModel.setProperty(sRuta + "estadoDian", "valido");
+                        oGastoModel.setProperty(sRuta + "detalleDian", this._texto("dianValido"));
                     } else {
-                        oGastoModel.setProperty("/estadoDian", "invalido");
-                        oGastoModel.setProperty("/detalleDian", oRespuesta.detalle || this._texto("dianInvalido"));
+                        oGastoModel.setProperty(sRuta + "estadoDian", "invalido");
+                        oGastoModel.setProperty(sRuta + "detalleDian", oRespuesta.detalle || this._texto("dianInvalido"));
                     }
                 }.bind(this))
                 .catch(function () {
                     oViewModel.setProperty("/validandoDian", false);
-                    oGastoModel.setProperty("/estadoDian", "invalido");
-                    oGastoModel.setProperty("/detalleDian", this._texto("dianError"));
+                    oGastoModel.setProperty(sRuta + "estadoDian", "invalido");
+                    oGastoModel.setProperty(sRuta + "detalleDian", this._texto("dianError"));
                 }.bind(this));
         },
 
         /**
-         * Verifica que los campos obligatorios del formulario estén completos
-         * @returns {boolean} true si el formulario es válido
+         * Verifica que los campos obligatorios estén completos en todas las
+         * facturas del lote. Si alguna factura no es válida, navega hacia ella
+         * y muestra el mensaje de error correspondiente.
+         * @returns {boolean} true si todas las facturas del lote son válidas
          * @private
          */
         _validarCamposObligatorios: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
-            var oGasto = oGastoModel.getData();
             var oViewModel = this.getView().getModel("vm");
+            var aFacturas = oGastoModel.getProperty("/facturas");
 
             var aCamposObligatorios = [
                 "tipoDocumento", "numeroFactura", "fechaEmision", "nitProveedor",
@@ -212,27 +286,33 @@ sap.ui.define([
                 "formaPago", "categoriaGasto"
             ];
 
-            var bValido = aCamposObligatorios.every(function (sCampo) {
-                return !!oGasto[sCampo];
-            });
+            for (var i = 0; i < aFacturas.length; i++) {
+                var oGasto = aFacturas[i];
+                var bValido = aCamposObligatorios.every(function (sCampo) {
+                    return !!oGasto[sCampo];
+                });
 
-            if (oGasto.total <= 0) {
-                bValido = false;
+                if (oGasto.total <= 0) {
+                    bValido = false;
+                }
+
+                if (!bValido) {
+                    oViewModel.setProperty("/indiceActual", i);
+                    oGastoModel.setProperty("/indiceActual", i);
+                    this._enlazarFacturaActual();
+                    oViewModel.setProperty("/mensajeError", this._texto("errCamposObligatoriosFactura", [i + 1]));
+                    oViewModel.setProperty("/mostrarError", true);
+                    return false;
+                }
             }
 
-            if (!bValido) {
-                oViewModel.setProperty("/mensajeError", this._texto("errCamposObligatorios"));
-                oViewModel.setProperty("/mostrarError", true);
-            } else {
-                oViewModel.setProperty("/mostrarError", false);
-            }
-
-            return bValido;
+            oViewModel.setProperty("/mostrarError", false);
+            return true;
         },
 
         /**
-         * Guarda el gasto actual como borrador
-         * Endpoint: POST /http/api/v1/gastos/borrador
+         * Guarda el lote completo de gastos como borradores
+         * Endpoint: POST /http/api/v1/gastos/borrador (body { gastos: [...] })
          */
         onGuardarBorrador: function () {
             var oGastoModel = this.getOwnerComponent().getModel("gasto");
@@ -242,7 +322,9 @@ sap.ui.define([
             oViewModel.setProperty("/guardando", true);
             oViewModel.setProperty("/mostrarError", false);
 
-            oApiService.post("/api/v1/gastos/borrador", oGastoModel.getData())
+            oApiService.post("/api/v1/gastos/borrador", {
+                gastos: oGastoModel.getProperty("/facturas")
+            })
                 .then(function () {
                     oViewModel.setProperty("/guardando", false);
                     MessageToast.show(this._texto("msgBorradorGuardado"));
@@ -255,8 +337,10 @@ sap.ui.define([
         },
 
         /**
-         * Registra el gasto definitivamente y navega a la pantalla de confirmación
-         * Endpoint: POST /http/api/v1/gastos/registrar
+         * Registra el lote completo de gastos definitivamente y navega a la
+         * pantalla de confirmación
+         * Endpoint: POST /http/api/v1/gastos/registrar (body { gastos: [...] },
+         *           respuesta { transacciones: [...] })
          */
         onRegistrarGasto: function () {
             if (!this._validarCamposObligatorios()) {
@@ -267,25 +351,37 @@ sap.ui.define([
             var oViewModel = this.getView().getModel("vm");
             var oApiService = this.getOwnerComponent().getApiService();
             var oRouter = this.getOwnerComponent().getRouter();
+            var aFacturas = oGastoModel.getProperty("/facturas");
 
             oViewModel.setProperty("/guardando", true);
             oViewModel.setProperty("/mostrarError", false);
 
-            oApiService.post("/api/v1/gastos/registrar", oGastoModel.getData())
+            oApiService.post("/api/v1/gastos/registrar", {
+                gastos: aFacturas
+            })
                 .then(function (oRespuesta) {
                     oViewModel.setProperty("/guardando", false);
 
-                    // Guardar el resultado en el modelo "" para que la Vista 6 lo muestre
-                    var oModel = this.getOwnerComponent().getModel();
-                    oModel.setProperty("/ultimoGastoRegistrado", {
-                        numeroTransaccion: oRespuesta.numeroTransaccion,
-                        proveedor: oGastoModel.getProperty("/razonSocialProveedor"),
-                        categoria: oGastoModel.getProperty("/categoriaGasto"),
-                        total: oGastoModel.getProperty("/total"),
-                        fecha: oGastoModel.getProperty("/fechaEmision")
-                    });
+                    var aTransacciones = (oRespuesta && oRespuesta.transacciones) || [];
 
-                    oRouter.navTo("RouteConfirmacion", { transaccionId: oRespuesta.numeroTransaccion });
+                    // Guardar los resultados en el modelo "" para que la Vista 6 los muestre
+                    var oModel = this.getOwnerComponent().getModel();
+                    oModel.setProperty("/gastosRegistrados", aTransacciones.map(function (oTransaccion, iIndice) {
+                        var oGasto = aFacturas[iIndice] || {};
+                        return {
+                            numeroTransaccion: oTransaccion.numeroTransaccion,
+                            proveedor: oGasto.razonSocialProveedor,
+                            categoria: oGasto.categoriaGasto,
+                            total: oGasto.total,
+                            fecha: oGasto.fechaEmision
+                        };
+                    }));
+
+                    var sTransaccionIds = aTransacciones.map(function (oTransaccion) {
+                        return oTransaccion.numeroTransaccion;
+                    }).join(",");
+
+                    oRouter.navTo("RouteConfirmacion", { transaccionIds: sTransaccionIds });
                 }.bind(this))
                 .catch(function (oError) {
                     oViewModel.setProperty("/guardando", false);
@@ -305,8 +401,8 @@ sap.ui.define([
          * Obtiene un texto traducido del bundle i18n
          * @private
          */
-        _texto: function (sClave) {
-            return this.getOwnerComponent().getModel("i18n").getResourceBundle().getText(sClave);
+        _texto: function (sClave, aParametros) {
+            return this.getOwnerComponent().getModel("i18n").getResourceBundle().getText(sClave, aParametros);
         },
 
         /**

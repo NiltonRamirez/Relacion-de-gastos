@@ -12,190 +12,204 @@
 
                 <Text text="{i18n>revisionSubtitle}" class="sapUiSmallMarginBottom"/>
 
-                <!-- ============ BANNER: TOPE DE VIÁTICOS EXCEDIDO ============ -->
-                <MessageStrip
-                    type="Warning"
-                    showIcon="true"
-                    visible="{gasto>/excedeTope}"
-                    class="sapUiSmallMarginBottom"
-                    text="{= ${i18n>topeExcedidoMensaje}.replace('{0}', ${parts: ['gasto>/total'], formatter: '.formatter.formatoMonedaCOP'}).replace('{1}', ${gasto>/categoriaGasto}).replace('{2}', ${parts: ['gasto>/topeAplicable'], formatter: '.formatter.formatoMonedaCOP'}) }"/>
+                <!-- ============ NAVEGADOR ENTRE FACTURAS DEL LOTE ============ -->
+                <Toolbar class="sapUiSmallMarginBottom">
+                    <Button icon="sap-icon://navigation-left-arrow" text="{i18n>btnFacturaAnterior}" press="onFacturaAnterior" enabled="{= ${vm>/indiceActual} > 0 }"/>
+                    <ToolbarSpacer/>
+                    <Title text="{= ${i18n>revisionFacturaContador}.replace('{0}', ${vm>/indiceActual} + 1).replace('{1}', ${vm>/totalFacturas}) }" level="H4"/>
+                    <ToolbarSpacer/>
+                    <Button icon="sap-icon://navigation-right-arrow" text="{i18n>btnFacturaSiguiente}" press="onFacturaSiguiente" enabled="{= ${vm>/indiceActual} + 1 &lt; ${vm>/totalFacturas} }"/>
+                </Toolbar>
 
-                <!-- ============ SECCIÓN: DATOS DEL DOCUMENTO ============ -->
-                <Panel headerText="{i18n>seccionDatosDocumento}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
-                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
-                        <f:content>
+                <!-- ============ CONTENEDOR ENLAZADO A LA FACTURA ACTUAL ============ -->
+                <VBox id="facturaContainer">
 
-                            <Label text="{i18n>lblTipoDocumento}"/>
-                            <Select selectedKey="{gasto>/tipoDocumento}" width="100%">
-                                <core:Item key="Factura venta" text="{i18n>optFacturaVenta}"/>
-                                <core:Item key="Tiquete" text="{i18n>optTiquete}"/>
-                                <core:Item key="Recibo" text="{i18n>optRecibo}"/>
-                            </Select>
+                    <!-- ============ BANNER: TOPE DE VIÁTICOS EXCEDIDO ============ -->
+                    <MessageStrip
+                        type="Warning"
+                        showIcon="true"
+                        visible="{gasto>excedeTope}"
+                        class="sapUiSmallMarginBottom"
+                        text="{= ${i18n>topeExcedidoMensaje}.replace('{0}', ${parts: ['gasto>total'], formatter: '.formatter.formatoMonedaCOP'}).replace('{1}', ${gasto>categoriaGasto}).replace('{2}', ${parts: ['gasto>topeAplicable'], formatter: '.formatter.formatoMonedaCOP'}) }"/>
 
-                            <Label text="{i18n>lblNumeroFactura}"/>
-                            <Input
-                                value="{gasto>/numeroFactura}"
-                                valueState="{ path: 'gasto>/confianzaOCR/numeroFactura', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}">
-                                <layoutData><l:GridData span="L6 M12 S12"/></layoutData>
-                            </Input>
+                    <!-- ============ SECCIÓN: DATOS DEL DOCUMENTO ============ -->
+                    <Panel headerText="{i18n>seccionDatosDocumento}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                        <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
+                            <f:content>
 
-                            <Label text="{i18n>lblCufe}"/>
-                            <Input
-                                value="{gasto>/cufe}"
-                                editable="{= !${gasto>/cufeSoloLectura} }"
-                                valueState="{ path: 'gasto>/confianzaOCR/cufe', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"/>
+                                <Label text="{i18n>lblTipoDocumento}"/>
+                                <Select selectedKey="{gasto>tipoDocumento}" width="100%">
+                                    <core:Item key="Factura venta" text="{i18n>optFacturaVenta}"/>
+                                    <core:Item key="Tiquete" text="{i18n>optTiquete}"/>
+                                    <core:Item key="Recibo" text="{i18n>optRecibo}"/>
+                                </Select>
 
-                            <Label text="{i18n>lblFechaEmision}"/>
-                            <DatePicker
-                                value="{path: 'gasto>/fechaEmision', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
-                                displayFormat="dd/MM/yyyy"
-                                valueState="{ path: 'gasto>/confianzaOCR/fechaEmision', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"
-                                width="100%"/>
-
-                            <Label text="{i18n>lblHoraEmision}"/>
-                            <TimePicker
-                                value="{path: 'gasto>/horaEmision', type: 'sap.ui.model.type.Time', formatOptions: {source: {pattern: 'HH:mm'}, pattern: 'HH:mm'}}"
-                                displayFormat="HH:mm"
-                                valueState="{ path: 'gasto>/confianzaOCR/horaEmision', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"
-                                width="100%"/>
-
-                        </f:content>
-                    </f:SimpleForm>
-                </Panel>
-
-                <!-- ============ SECCIÓN: DATOS DEL PROVEEDOR ============ -->
-                <Panel headerText="{i18n>seccionDatosProveedor}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
-                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
-                        <f:content>
-
-                            <Label text="{i18n>lblNitProveedor}"/>
-                            <HBox>
+                                <Label text="{i18n>lblNumeroFactura}"/>
                                 <Input
-                                    value="{gasto>/nitProveedor}"
-                                    valueState="{ path: 'gasto>/confianzaOCR/nitProveedor', formatter: '.formatter.confianzaAValueState' }"
+                                    value="{gasto>numeroFactura}"
+                                    valueState="{ path: 'gasto>confianzaOCR/numeroFactura', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}">
+                                    <layoutData><l:GridData span="L6 M12 S12"/></layoutData>
+                                </Input>
+
+                                <Label text="{i18n>lblCufe}"/>
+                                <Input
+                                    value="{gasto>cufe}"
+                                    editable="{= !${gasto>cufeSoloLectura} }"
+                                    valueState="{ path: 'gasto>confianzaOCR/cufe', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}"/>
+
+                                <Label text="{i18n>lblFechaEmision}"/>
+                                <DatePicker
+                                    value="{path: 'gasto>fechaEmision', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
+                                    displayFormat="dd/MM/yyyy"
+                                    valueState="{ path: 'gasto>confianzaOCR/fechaEmision', formatter: '.formatter.confianzaAValueState' }"
                                     valueStateText="{i18n>avisoBajaConfianza}"
-                                    width="60%"
-                                    class="sapUiTinyMarginEnd"/>
-                                <Button text="{i18n>btnValidarDian}" press="onValidarNitDian" enabled="{= !${vm>/validandoDian} }"/>
-                                <core:Icon
-                                    src="{ path: 'gasto>/estadoDian', formatter: '.formatter.dianAIcono' }"
-                                    color="{ path: 'gasto>/estadoDian', formatter: '.formatter.dianAColor' }"
-                                    class="sapUiTinyMarginBegin"
-                                    tooltip="{gasto>/detalleDian}"/>
-                            </HBox>
-
-                            <Label text="{i18n>lblRazonSocial}"/>
-                            <Input
-                                value="{gasto>/razonSocialProveedor}"
-                                valueState="{ path: 'gasto>/confianzaOCR/razonSocialProveedor', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"/>
-
-                            <Label text="{i18n>lblNombreEstablecimiento}"/>
-                            <Input
-                                value="{gasto>/nombreEstablecimiento}"
-                                valueState="{ path: 'gasto>/confianzaOCR/nombreEstablecimiento', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"/>
-
-                            <Label text="{i18n>lblDireccion}"/>
-                            <Input
-                                value="{gasto>/direccion}"
-                                valueState="{ path: 'gasto>/confianzaOCR/direccion', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"/>
-
-                            <Label text="{i18n>lblCiudad}"/>
-                            <Select selectedKey="{gasto>/ciudad}" width="100%" items="{ path: 'vm>/ciudades', templateShareable: false }">
-                                <core:Item key="{vm>}" text="{vm>}"/>
-                            </Select>
-
-                        </f:content>
-                    </f:SimpleForm>
-                </Panel>
-
-                <!-- ============ SECCIÓN: DATOS FINANCIEROS ============ -->
-                <Panel headerText="{i18n>seccionDatosFinancieros}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
-                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
-                        <f:content>
-
-                            <Label text="{i18n>lblMoneda}"/>
-                            <Select selectedKey="{gasto>/moneda}" width="100%">
-                                <core:Item key="COP" text="COP - Peso colombiano"/>
-                                <core:Item key="USD" text="USD - Dólar estadounidense"/>
-                            </Select>
-
-                            <Label text="{i18n>lblSubtotal}"/>
-                            <Input
-                                value="{path: 'gasto>/subtotal', type: 'sap.ui.model.type.Float'}"
-                                type="Number"
-                                change="onCambioSubtotal"
-                                valueState="{ path: 'gasto>/confianzaOCR/subtotal', formatter: '.formatter.confianzaAValueState' }"
-                                valueStateText="{i18n>avisoBajaConfianza}"/>
-
-                            <Label text="{i18n>lblValorIva}"/>
-                            <Input
-                                value="{path: 'gasto>/valorIva', type: 'sap.ui.model.type.Float'}"
-                                type="Number"
-                                change="onCambioTotales"/>
-
-                            <Label text="{i18n>lblImpuestosAdicionales}"/>
-                            <Input
-                                value="{path: 'gasto>/impuestosAdicionales', type: 'sap.ui.model.type.Float'}"
-                                type="Number"
-                                change="onCambioTotales"/>
-
-                            <Label text="{i18n>lblPropina}"/>
-                            <Input
-                                value="{path: 'gasto>/propina', type: 'sap.ui.model.type.Float'}"
-                                type="Number"
-                                change="onCambioTotales"/>
-
-                            <Label text="{i18n>lblTotal}"/>
-                            <Input
-                                value="{path: 'gasto>/total', type: 'sap.ui.model.type.Float'}"
-                                type="Number"
-                                editable="false"/>
-
-                            <Label text="{i18n>lblFormaPago}"/>
-                            <Select selectedKey="{gasto>/formaPago}" width="100%">
-                                <core:Item key="Efectivo" text="{i18n>optEfectivo}"/>
-                                <core:Item key="Tarjeta debito" text="{i18n>optTarjetaDebito}"/>
-                                <core:Item key="Tarjeta credito corporativa" text="{i18n>optTarjetaCredito}"/>
-                            </Select>
-
-                        </f:content>
-                    </f:SimpleForm>
-                </Panel>
-
-                <!-- ============ SECCIÓN: CLASIFICACIÓN DEL GASTO ============ -->
-                <Panel headerText="{i18n>seccionClasificacion}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
-                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="1" columnsM="1">
-                        <f:content>
-
-                            <Label text="{i18n>lblCategoriaGasto}"/>
-                            <Select selectedKey="{gasto>/categoriaGasto}" change="onCambioCategoria" width="100%">
-                                <core:Item key="Hospedaje" text="{i18n>optHospedaje}"/>
-                                <core:Item key="Alimentacion" text="{i18n>optAlimentacion}"/>
-                                <core:Item key="Transporte" text="{i18n>optTransporte}"/>
-                                <core:Item key="Otros" text="{i18n>optOtros}"/>
-                            </Select>
-
-                            <Label text="{i18n>lblDescripcionConsumo}"/>
-                            <VBox>
-                                <TextArea
-                                    value="{gasto>/descripcionConsumo}"
-                                    rows="4"
-                                    maxLength="500"
-                                    liveChange="onCambioDescripcion"
                                     width="100%"/>
-                                <Text text="{= ${i18n>descripcionContador}.replace('{0}', (${gasto>/descripcionConsumo} || '').length) }" class="sapUiTinyMarginTop"/>
-                            </VBox>
 
-                        </f:content>
-                    </f:SimpleForm>
-                </Panel>
+                                <Label text="{i18n>lblHoraEmision}"/>
+                                <TimePicker
+                                    value="{path: 'gasto>horaEmision', type: 'sap.ui.model.type.Time', formatOptions: {source: {pattern: 'HH:mm'}, pattern: 'HH:mm'}}"
+                                    displayFormat="HH:mm"
+                                    valueState="{ path: 'gasto>confianzaOCR/horaEmision', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}"
+                                    width="100%"/>
+
+                            </f:content>
+                        </f:SimpleForm>
+                    </Panel>
+
+                    <!-- ============ SECCIÓN: DATOS DEL PROVEEDOR ============ -->
+                    <Panel headerText="{i18n>seccionDatosProveedor}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                        <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
+                            <f:content>
+
+                                <Label text="{i18n>lblNitProveedor}"/>
+                                <HBox>
+                                    <Input
+                                        value="{gasto>nitProveedor}"
+                                        valueState="{ path: 'gasto>confianzaOCR/nitProveedor', formatter: '.formatter.confianzaAValueState' }"
+                                        valueStateText="{i18n>avisoBajaConfianza}"
+                                        width="60%"
+                                        class="sapUiTinyMarginEnd"/>
+                                    <Button text="{i18n>btnValidarDian}" press="onValidarNitDian" enabled="{= !${vm>/validandoDian} }"/>
+                                    <core:Icon
+                                        src="{ path: 'gasto>estadoDian', formatter: '.formatter.dianAIcono' }"
+                                        color="{ path: 'gasto>estadoDian', formatter: '.formatter.dianAColor' }"
+                                        class="sapUiTinyMarginBegin"
+                                        tooltip="{gasto>detalleDian}"/>
+                                </HBox>
+
+                                <Label text="{i18n>lblRazonSocial}"/>
+                                <Input
+                                    value="{gasto>razonSocialProveedor}"
+                                    valueState="{ path: 'gasto>confianzaOCR/razonSocialProveedor', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}"/>
+
+                                <Label text="{i18n>lblNombreEstablecimiento}"/>
+                                <Input
+                                    value="{gasto>nombreEstablecimiento}"
+                                    valueState="{ path: 'gasto>confianzaOCR/nombreEstablecimiento', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}"/>
+
+                                <Label text="{i18n>lblDireccion}"/>
+                                <Input
+                                    value="{gasto>direccion}"
+                                    valueState="{ path: 'gasto>confianzaOCR/direccion', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}"/>
+
+                                <Label text="{i18n>lblCiudad}"/>
+                                <Select selectedKey="{gasto>ciudad}" width="100%" items="{ path: 'vm>/ciudades', templateShareable: false }">
+                                    <core:Item key="{vm>}" text="{vm>}"/>
+                                </Select>
+
+                            </f:content>
+                        </f:SimpleForm>
+                    </Panel>
+
+                    <!-- ============ SECCIÓN: DATOS FINANCIEROS ============ -->
+                    <Panel headerText="{i18n>seccionDatosFinancieros}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                        <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
+                            <f:content>
+
+                                <Label text="{i18n>lblMoneda}"/>
+                                <Select selectedKey="{gasto>moneda}" width="100%">
+                                    <core:Item key="COP" text="COP - Peso colombiano"/>
+                                    <core:Item key="USD" text="USD - Dólar estadounidense"/>
+                                </Select>
+
+                                <Label text="{i18n>lblSubtotal}"/>
+                                <Input
+                                    value="{path: 'gasto>subtotal', type: 'sap.ui.model.type.Float'}"
+                                    type="Number"
+                                    change="onCambioSubtotal"
+                                    valueState="{ path: 'gasto>confianzaOCR/subtotal', formatter: '.formatter.confianzaAValueState' }"
+                                    valueStateText="{i18n>avisoBajaConfianza}"/>
+
+                                <Label text="{i18n>lblValorIva}"/>
+                                <Input
+                                    value="{path: 'gasto>valorIva', type: 'sap.ui.model.type.Float'}"
+                                    type="Number"
+                                    change="onCambioTotales"/>
+
+                                <Label text="{i18n>lblImpuestosAdicionales}"/>
+                                <Input
+                                    value="{path: 'gasto>impuestosAdicionales', type: 'sap.ui.model.type.Float'}"
+                                    type="Number"
+                                    change="onCambioTotales"/>
+
+                                <Label text="{i18n>lblPropina}"/>
+                                <Input
+                                    value="{path: 'gasto>propina', type: 'sap.ui.model.type.Float'}"
+                                    type="Number"
+                                    change="onCambioTotales"/>
+
+                                <Label text="{i18n>lblTotal}"/>
+                                <Input
+                                    value="{path: 'gasto>total', type: 'sap.ui.model.type.Float'}"
+                                    type="Number"
+                                    editable="false"/>
+
+                                <Label text="{i18n>lblFormaPago}"/>
+                                <Select selectedKey="{gasto>formaPago}" width="100%">
+                                    <core:Item key="Efectivo" text="{i18n>optEfectivo}"/>
+                                    <core:Item key="Tarjeta debito" text="{i18n>optTarjetaDebito}"/>
+                                    <core:Item key="Tarjeta credito corporativa" text="{i18n>optTarjetaCredito}"/>
+                                </Select>
+
+                            </f:content>
+                        </f:SimpleForm>
+                    </Panel>
+
+                    <!-- ============ SECCIÓN: CLASIFICACIÓN DEL GASTO ============ -->
+                    <Panel headerText="{i18n>seccionClasificacion}" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                        <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="4" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="1" columnsM="1">
+                            <f:content>
+
+                                <Label text="{i18n>lblCategoriaGasto}"/>
+                                <Select selectedKey="{gasto>categoriaGasto}" change="onCambioCategoria" width="100%">
+                                    <core:Item key="Hospedaje" text="{i18n>optHospedaje}"/>
+                                    <core:Item key="Alimentacion" text="{i18n>optAlimentacion}"/>
+                                    <core:Item key="Transporte" text="{i18n>optTransporte}"/>
+                                    <core:Item key="Otros" text="{i18n>optOtros}"/>
+                                </Select>
+
+                                <Label text="{i18n>lblDescripcionConsumo}"/>
+                                <VBox>
+                                    <TextArea
+                                        value="{gasto>descripcionConsumo}"
+                                        rows="4"
+                                        maxLength="500"
+                                        liveChange="onCambioDescripcion"
+                                        width="100%"/>
+                                    <Text text="{= ${i18n>descripcionContador}.replace('{0}', (${gasto>descripcionConsumo} || '').length) }" class="sapUiTinyMarginTop"/>
+                                </VBox>
+
+                            </f:content>
+                        </f:SimpleForm>
+                    </Panel>
+
+                </VBox>
 
                 <!-- Mensaje de error general -->
                 <MessageStrip

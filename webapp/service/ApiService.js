@@ -14,20 +14,24 @@ sap.ui.define([
      *   POST /api/v1/auth/login
      *   POST /api/v1/auth/registro
      *   GET  /api/v1/usuarios/me
-     *   POST /api/v1/facturas/capturar          (multipart/form-data - imagen de cámara)
-     *   POST /api/v1/facturas/cargar             (multipart/form-data - PDF / XML)
-     *   GET  /api/v1/facturas/ocr/{jobId}        (polling de estado OCR)
-     *   POST /api/v1/dian/validar-nit            (validación NIT/CUFE ante DIAN)
-     *   GET  /api/v1/topes-viaticos              (topes configurados por categoría)
-     *   POST /api/v1/gastos/registrar            (registrar gasto definitivo)
-     *   POST /api/v1/gastos/borrador             (guardar borrador)
-     *   GET  /api/v1/gastos                      (lista de gastos con filtros)
-     *   GET  /api/v1/gastos/{id}                 (detalle de un gasto)
-     *   GET  /api/v1/gastos/{id}/factura         (descarga del archivo de factura)
-     *   GET  /api/v1/gastos/resumen              (resumen mensual para el dashboard)
-     *   GET  /api/v1/gastos/pendientes           (gastos pendientes de aprobación - analista)
-     *   POST /api/v1/gastos/{id}/aprobar         (aprobar gasto - analista)
-     *   POST /api/v1/gastos/{id}/rechazar        (rechazar gasto - analista)
+     *   POST /api/v1/facturas/capturar           (multipart/form-data - una o varias imágenes de cámara,
+     *                                              campo "archivos" repetido; respuesta: arreglo "jobs")
+     *   POST /api/v1/facturas/cargar              (multipart/form-data - uno o varios PDF / XML,
+     *                                              campo "archivos" repetido; respuesta: arreglo "jobs")
+     *   GET  /api/v1/facturas/ocr/lote?jobIds=... (polling de estado OCR para un lote de jobIds;
+     *                                              respuesta: arreglo "resultados")
+     *   POST /api/v1/dian/validar-nit             (validación NIT/CUFE ante DIAN)
+     *   GET  /api/v1/topes-viaticos               (topes configurados por categoría)
+     *   POST /api/v1/gastos/registrar             (registrar un lote de gastos; body { gastos: [...] },
+     *                                              respuesta { transacciones: [...] })
+     *   POST /api/v1/gastos/borrador              (guardar un lote de borradores; body { gastos: [...] })
+     *   GET  /api/v1/gastos                       (lista de gastos con filtros)
+     *   GET  /api/v1/gastos/{id}                  (detalle de un gasto)
+     *   GET  /api/v1/gastos/{id}/factura          (descarga del archivo de factura)
+     *   GET  /api/v1/gastos/resumen               (resumen mensual para el dashboard)
+     *   GET  /api/v1/gastos/pendientes            (gastos pendientes de aprobación - analista)
+     *   POST /api/v1/gastos/{id}/aprobar          (aprobar gasto - analista)
+     *   POST /api/v1/gastos/{id}/rechazar         (rechazar gasto - analista)
      */
     return BaseObject.extend("com.ccb.viaticos.service.ApiService", {
 

@@ -23,13 +23,14 @@
                         <Text text="{i18n>dropZoneFormatos}" textAlign="Center" class="sapUiTinyMarginTop"/>
                     </VBox>
 
-                    <!-- Input de archivo oculto, activado mediante el botón "Seleccionar archivo" -->
+                    <!-- Input de archivo oculto, activado mediante el botón "Seleccionar archivos" -->
                     <u:FileUploader
                         id="fileUploader"
                         visible="false"
+                        multiple="true"
                         fileType="pdf,xml"
                         mimeType="application/pdf,text/xml,application/xml"
-                        change="onArchivoSeleccionado"/>
+                        change="onArchivosSeleccionados"/>
 
                     <Button
                         id="btnSeleccionarArchivo"
@@ -39,12 +40,22 @@
                         press="onAbrirSelectorArchivo"
                         class="sapUiMediumMarginTop"/>
 
-                    <!-- Información del archivo seleccionado -->
-                    <Panel headerText="{i18n>archivoSeleccionado}" visible="{vm>/archivoSeleccionado}" class="sapUiMediumMarginTop">
-                        <VBox class="sapUiSmallMargin">
-                            <ObjectStatus text="{vm>/nombreArchivo}" icon="sap-icon://document" state="None"/>
-                            <Text text="{vm>/tamanoArchivo}"/>
-                        </VBox>
+                    <!-- Lista de archivos seleccionados -->
+                    <Panel
+                        headerText="{= ${i18n>archivosSeleccionados}.replace('{0}', ${vm>/archivos}.length) }"
+                        visible="{= ${vm>/archivos}.length > 0 }"
+                        class="sapUiMediumMarginTop">
+                        <List items="{vm>/archivos}">
+                            <CustomListItem>
+                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMargin" width="100%">
+                                    <VBox>
+                                        <ObjectStatus text="{vm>nombreArchivo}" icon="sap-icon://document" state="None"/>
+                                        <Text text="{vm>tamanoArchivo}"/>
+                                    </VBox>
+                                    <Button icon="sap-icon://delete" type="Transparent" press="onEliminarArchivo"/>
+                                </HBox>
+                            </CustomListItem>
+                        </List>
                     </Panel>
 
                     <!-- Mensajes de validación de formato/tamaño -->
@@ -56,10 +67,20 @@
                         class="sapUiMediumMarginTop"/>
 
                     <MessageStrip
-                        text="{i18n>errTamanoExcedido}"
+                        text="{vm>/mensajeErrorTamano}"
                         type="Error"
                         showIcon="true"
                         visible="{vm>/errorTamano}"
+                        class="sapUiMediumMarginTop"/>
+
+                    <!-- Botón para iniciar la carga del lote -->
+                    <Button
+                        text="{i18n>btnCargarFacturas}"
+                        type="Emphasized"
+                        icon="sap-icon://upload-to-cloud"
+                        press="onCargarFacturas"
+                        enabled="{= ${vm>/archivos}.length > 0 &amp;&amp; !${vm>/subiendo} }"
+                        width="100%"
                         class="sapUiMediumMarginTop"/>
 
                     <!-- Barra de progreso de carga -->

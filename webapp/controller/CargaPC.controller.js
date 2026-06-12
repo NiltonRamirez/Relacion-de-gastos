@@ -7,7 +7,7 @@ sap.ui.define([
 
     // Intervalo de polling para consultar el estado del OCR (en milisegundos)
     var INTERVALO_POLLING_MS = 2000;
-    // Tamaño máximo permitido del archivo (10 MB)
+    // Tamaño máximo permitido por archivo (10 MB)
     var TAMANO_MAXIMO_BYTES = 10 * 1024 * 1024;
     // Extensiones de archivo aceptadas
     var EXTENSIONES_VALIDAS = ["pdf", "xml"];
@@ -17,15 +17,14 @@ sap.ui.define([
         formatter: formatter,
 
         /**
-         * Inicialización de la vista de carga de factura desde PC
+         * Inicialización de la vista de carga de facturas desde PC
          */
         onInit: function () {
             var oViewModel = new JSONModel({
-                archivoSeleccionado: false,
-                nombreArchivo: "",
-                tamanoArchivo: "",
+                archivos: [],
                 errorFormato: false,
                 errorTamano: false,
+                mensajeErrorTamano: "",
                 subiendo: false,
                 procesando: false,
                 porcentajeCarga: 0,
@@ -34,7 +33,8 @@ sap.ui.define([
             });
             this.getView().setModel(oViewModel, "vm");
 
-            this._oArchivo = null;
+            // Arreglo paralelo de objetos File (no serializables en el modelo JSON)
+            this._aArchivos = [];
 
             var oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteCargaPC").attachPatternMatched(this._onRoutePatternMatched, this);
@@ -47,18 +47,17 @@ sap.ui.define([
         _onRoutePatternMatched: function () {
             var oViewModel = this.getView().getModel("vm");
             oViewModel.setData({
-                archivoSeleccionado: false,
-                nombreArchivo: "",
-                tamanoArchivo: "",
+                archivos: [],
                 errorFormato: false,
                 errorTamano: false,
+                mensajeErrorTamano: "",
                 subiendo: false,
                 procesando: false,
                 porcentajeCarga: 0,
                 mensajeError: "",
                 mostrarError: false
             });
-            this._oArchivo = null;
+            this._aArchivos = [];
         },
 
         /**
@@ -88,7 +87,7 @@ sap.ui.define([
                 oZona.classList.remove("dropZoneActiva");
                 var aArchivos = oEvento.dataTransfer.files;
                 if (aArchivos && aArchivos.length > 0) {
-                    this._procesarArchivoSeleccionado(aArchivos[0]);
+                    this._procesarArchivosSeleccionados(aArchivos);
                 }
             }.bind(this));
         },
@@ -102,65 +101,98 @@ sap.ui.define([
         },
 
         /**
-         * Manejador del control FileUploader cuando se selecciona un archivo
+         * Manejador del control FileUploader cuando se seleccionan archivos
          */
-        onArchivoSeleccionado: function (oEvent) {
-            var oArchivo = oEvent.getParameter("files") && oEvent.getParameter("files")[0];
-            if (oArchivo) {
-                this._procesarArchivoSeleccionado(oArchivo);
+        onArchivosSeleccionados: function (oEvent) {
+            var aArchivos = oEvent.getParameter("files");
+            if (aArchivos && aArchivos.length > 0) {
+                this._procesarArchivosSeleccionados(aArchivos);
             }
         },
 
         /**
-         * Valida el formato (.pdf / .xml) y tamaño (máx. 10MB) del archivo
-         * seleccionado y actualiza el estado de la vista
-         * @param {File} oArchivo - archivo seleccionado por el usuario
+         * Valida el formato (.pdf / .xml) y tamaño (máx. 10MB) de cada archivo
+         * seleccionado y los agrega a la lista de archivos pendientes de carga
+         * @param {FileList|Array<File>} aArchivos - archivos seleccionados por el usuario
          * @private
          */
-        _procesarArchivoSeleccionado: function (oArchivo) {
+        _procesarArchivosSeleccionados: function (aArchivos) {
             var oViewModel = this.getView().getModel("vm");
-            var sExtension = oArchivo.name.split(".").pop().toLowerCase();
+            var oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
 
             oViewModel.setProperty("/errorFormato", false);
             oViewModel.setProperty("/errorTamano", false);
             oViewModel.setProperty("/mostrarError", false);
 
-            if (EXTENSIONES_VALIDAS.indexOf(sExtension) === -1) {
-                oViewModel.setProperty("/errorFormato", true);
-                oViewModel.setProperty("/archivoSeleccionado", false);
-                return;
+            var aListaActual = oViewModel.getProperty("/archivos");
+            var bErrorFormato = false;
+            var bErrorTamano = false;
+            var sMensajeTamano = "";
+
+            for (var i = 0; i < aArchivos.length; i++) {
+                var oArchivo = aArchivos[i];
+                var sExtension = oArchivo.name.split(".").pop().toLowerCase();
+
+                if (EXTENSIONES_VALIDAS.indexOf(sExtension) === -1) {
+                    bErrorFormato = true;
+                    continue;
+                }
+
+                if (oArchivo.size > TAMANO_MAXIMO_BYTES) {
+                    bErrorTamano = true;
+                    sMensajeTamano = oBundle.getText("errTamanoExcedido", [oArchivo.name]);
+                    continue;
+                }
+
+                this._aArchivos.push(oArchivo);
+                aListaActual.push({
+                    nombreArchivo: oArchivo.name,
+                    tamanoArchivo: formatter.formatoTamanoArchivo(oArchivo.size)
+                });
             }
 
-            if (oArchivo.size > TAMANO_MAXIMO_BYTES) {
-                oViewModel.setProperty("/errorTamano", true);
-                oViewModel.setProperty("/archivoSeleccionado", false);
-                return;
-            }
-
-            this._oArchivo = oArchivo;
-            oViewModel.setProperty("/archivoSeleccionado", true);
-            oViewModel.setProperty("/nombreArchivo", oArchivo.name);
-            oViewModel.setProperty("/tamanoArchivo", formatter.formatoTamanoArchivo(oArchivo.size));
-
-            // Iniciar automáticamente la carga y procesamiento
-            this._subirArchivo();
+            oViewModel.setProperty("/archivos", aListaActual);
+            oViewModel.setProperty("/errorFormato", bErrorFormato);
+            oViewModel.setProperty("/errorTamano", bErrorTamano);
+            oViewModel.setProperty("/mensajeErrorTamano", sMensajeTamano);
         },
 
         /**
-         * Sube el archivo al backend (CPI) mostrando una barra de progreso
-         * y luego inicia el polling del estado de OCR
-         * Endpoint: POST /http/api/v1/facturas/cargar
-         * @private
+         * Elimina un archivo de la lista de archivos pendientes de carga
+         * @param {sap.ui.base.Event} oEvento - evento de presión del botón eliminar
          */
-        _subirArchivo: function () {
+        onEliminarArchivo: function (oEvento) {
+            var oViewModel = this.getView().getModel("vm");
+            var oContexto = oEvento.getSource().getBindingContext("vm");
+            var iIndice = parseInt(oContexto.getPath().split("/").pop(), 10);
+
+            var aListaActual = oViewModel.getProperty("/archivos");
+            aListaActual.splice(iIndice, 1);
+            this._aArchivos.splice(iIndice, 1);
+            oViewModel.setProperty("/archivos", aListaActual);
+        },
+
+        /**
+         * Sube todos los archivos seleccionados al backend (CPI) mostrando una
+         * barra de progreso y luego inicia el polling del estado de OCR del lote
+         * Endpoint: POST /http/api/v1/facturas/cargar
+         */
+        onCargarFacturas: function () {
             var oViewModel = this.getView().getModel("vm");
             var oApiService = this.getOwnerComponent().getApiService();
 
+            if (!this._aArchivos.length) {
+                return;
+            }
+
             oViewModel.setProperty("/subiendo", true);
             oViewModel.setProperty("/porcentajeCarga", 0);
+            oViewModel.setProperty("/mostrarError", false);
 
             var oFormData = new FormData();
-            oFormData.append("archivo", this._oArchivo, this._oArchivo.name);
+            this._aArchivos.forEach(function (oArchivo) {
+                oFormData.append("archivos", oArchivo, oArchivo.name);
+            });
             oFormData.append("origen", "pc");
 
             oApiService.postFormData("/api/v1/facturas/cargar", oFormData, function (iPorcentaje) {
@@ -171,10 +203,13 @@ sap.ui.define([
                     oViewModel.setProperty("/procesando", true);
                     oViewModel.setProperty("/porcentajeCarga", 0);
 
-                    if (!oRespuesta || !oRespuesta.jobId) {
+                    if (!oRespuesta || !oRespuesta.jobs || !oRespuesta.jobs.length) {
                         throw { message: "errorGenerico" };
                     }
-                    return this._iniciarPollingOcr(oRespuesta.jobId);
+                    var aJobIds = oRespuesta.jobs.map(function (oJob) {
+                        return oJob.jobId;
+                    });
+                    return this._iniciarPollingOcrLote(aJobIds);
                 }.bind(this))
                 .catch(function (oError) {
                     oViewModel.setProperty("/subiendo", false);
@@ -185,29 +220,39 @@ sap.ui.define([
         },
 
         /**
-         * Realiza polling al endpoint de estado del OCR hasta que el
-         * procesamiento finalice y navega automáticamente a la Vista 5
-         * Endpoint: GET /http/api/v1/facturas/ocr/{jobId}
-         * @param {string} sJobId - identificador del job de OCR
+         * Realiza polling al endpoint de estado del OCR del lote hasta que todos
+         * los documentos finalicen su procesamiento y navega automáticamente a la Vista 5
+         * Endpoint: GET /http/api/v1/facturas/ocr/lote?jobIds=...
+         * @param {Array<string>} aJobIds - identificadores de los jobs de OCR
          * @private
          */
-        _iniciarPollingOcr: function (sJobId) {
+        _iniciarPollingOcrLote: function (aJobIds) {
             var oApiService = this.getOwnerComponent().getApiService();
             var oRouter = this.getOwnerComponent().getRouter();
             var oViewModel = this.getView().getModel("vm");
+            var sJobIds = aJobIds.join(",");
             var iProgreso = 0;
 
             return new Promise(function (resolve, reject) {
                 var consultarEstado = function () {
-                    oApiService.get("/api/v1/facturas/ocr/" + sJobId)
-                        .then(function (oEstado) {
-                            if (oEstado.status === "completado") {
-                                oViewModel.setProperty("/porcentajeCarga", 100);
-                                resolve(oEstado);
-                                // Transición automática a la Vista 5 (Revisión de datos)
-                                oRouter.navTo("RouteRevisionDatos", { jobId: sJobId });
-                            } else if (oEstado.status === "error") {
+                    oApiService.get("/api/v1/facturas/ocr/lote?jobIds=" + encodeURIComponent(sJobIds))
+                        .then(function (oRespuesta) {
+                            var aResultados = (oRespuesta && oRespuesta.resultados) || [];
+                            var bTodosCompletados = aResultados.length === aJobIds.length &&
+                                aResultados.every(function (oResultado) {
+                                    return oResultado.status === "completado";
+                                });
+                            var bAlgunError = aResultados.some(function (oResultado) {
+                                return oResultado.status === "error";
+                            });
+
+                            if (bAlgunError) {
                                 reject({ message: "errorGenerico" });
+                            } else if (bTodosCompletados) {
+                                oViewModel.setProperty("/porcentajeCarga", 100);
+                                resolve(aResultados);
+                                // Transición automática a la Vista 5 (Revisión de datos)
+                                oRouter.navTo("RouteRevisionDatos", { jobIds: sJobIds });
                             } else {
                                 // Avance visual incremental mientras se espera el resultado
                                 iProgreso = Math.min(iProgreso + 10, 90);
