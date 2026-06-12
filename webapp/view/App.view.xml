@@ -1,0 +1,12 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.App"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true">
+    <!-- Contenedor de navegación raíz: todas las vistas se apilan aquí mediante el router -->
+    <App id="app" busy="false" busyIndicatorDelay="0">
+        <pages>
+            <!-- Las páginas se agregan dinámicamente mediante las rutas del manifest.json -->
+        </pages>
+    </App>
+</mvc:View>

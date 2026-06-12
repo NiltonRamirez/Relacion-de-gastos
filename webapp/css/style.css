@@ -1,0 +1,120 @@
+/* ===========================================================
+   Estilos generales - App de Gestión de Viáticos
+   =========================================================== */
+
+/* Pantalla de login */
+.loginPage {
+    background: linear-gradient(135deg, #0a4f8c 0%, #1a73b8 100%);
+    height: 100%;
+}
+
+.loginPanel {
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    background-color: var(--sapBaseColor);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+}
+
+.loginLogo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+/* Tarjetas del dashboard */
+.dashboardCard {
+    cursor: pointer;
+    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.dashboardCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+}
+
+.resumenTile {
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Captura móvil */
+.camaraContainer {
+    width: 100%;
+    max-width: 32rem;
+    margin: 0 auto;
+    border: 0.125rem dashed var(--sapNeutralBorderColor);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: #000;
+}
+
+.camaraPreview {
+    width: 100%;
+    display: block;
+}
+
+.calidadIndicadorBuena {
+    color: var(--sapPositiveColor);
+    font-weight: bold;
+}
+
+.calidadIndicadorMala {
+    color: var(--sapNegativeColor);
+    font-weight: bold;
+}
+
+/* Drag and drop */
+.dropZone {
+    border: 0.125rem dashed var(--sapNeutralBorderColor);
+    border-radius: 0.5rem;
+    padding: 3rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.dropZoneActiva {
+    border-color: var(--sapSelectedColor);
+    background-color: var(--sapSelectedColor);
+    opacity: 0.1;
+}
+
+/* Campos con baja confianza OCR */
+.campoBajaConfianza input,
+.campoBajaConfianza .sapMInputBaseInner {
+    border-color: var(--sapWarningBorderColor) !important;
+    border-width: 0.125rem !important;
+}
+
+.iconoAdvertenciaCampo {
+    color: var(--sapWarningColor);
+}
+
+/* Confirmación */
+.confirmacionIcono {
+    color: var(--sapPositiveColor);
+    text-align: center;
+}
+
+/* Estados de gasto */
+.estadoRegistrado {
+    color: var(--sapInformativeColor);
+    font-weight: bold;
+}
+
+.estadoEnRevision {
+    color: var(--sapCriticalColor);
+    font-weight: bold;
+}
+
+.estadoAprobado {
+    color: var(--sapPositiveColor);
+    font-weight: bold;
+}
+
+.estadoRechazado {
+    color: var(--sapNegativeColor);
+    font-weight: bold;
+}

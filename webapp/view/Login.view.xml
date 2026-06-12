@@ -1,0 +1,150 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.Login"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <Page id="loginPage" showHeader="false" class="loginPage">
+        <content>
+            <VBox justifyContent="Center" alignItems="Center" class="sapUiLargeMarginTop sapUiLargeMarginBottom">
+                <VBox class="loginPanel" width="100%">
+
+                    <!-- Logo corporativo -->
+                    <VBox class="loginLogo">
+                        <core:Icon src="sap-icon://traveling-expense-report" size="3rem" color="#0a4f8c"/>
+                    </VBox>
+
+                    <Title text="{i18n>loginTitle}" level="H1" textAlign="Center" class="sapUiSmallMarginBottom"/>
+                    <Text text="{i18n>loginSubtitle}" textAlign="Center" class="sapUiMediumMarginBottom"/>
+
+                    <!-- ============ FORMULARIO DE LOGIN ============ -->
+                    <VBox id="formLogin" visible="{= !${vm>/mostrarRegistro} }">
+
+                        <Label text="{i18n>loginUserLabel}" required="true" labelFor="inputCorreo"/>
+                        <Input
+                            id="inputCorreo"
+                            type="Email"
+                            placeholder="{i18n>loginUserPlaceholder}"
+                            value="{vm>/login/correo}"
+                            valueState="{vm>/login/correoState}"
+                            valueStateText="{vm>/login/correoStateText}"
+                            liveChange="onValidarCorreoLogin"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Label text="{i18n>loginPasswordLabel}" required="true" labelFor="inputPassword"/>
+                        <Input
+                            id="inputPassword"
+                            type="Password"
+                            placeholder="{i18n>loginPasswordPlaceholder}"
+                            value="{vm>/login/password}"
+                            valueState="{vm>/login/passwordState}"
+                            valueStateText="{vm>/login/passwordStateText}"
+                            liveChange="onValidarPasswordLogin"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <MessageStrip
+                            text="{vm>/login/mensajeError}"
+                            type="Error"
+                            showIcon="true"
+                            visible="{vm>/login/mostrarError}"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Button
+                            id="btnIngresar"
+                            text="{i18n>btnIngresar}"
+                            type="Emphasized"
+                            width="100%"
+                            enabled="{= !${vm>/login/cargando} }"
+                            press="onIngresar"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <BusyIndicator visible="{vm>/login/cargando}" class="sapUiSmallMarginBottom"/>
+
+                        <Link
+                            text="{i18n>linkRegistro}"
+                            press="onMostrarRegistro"
+                            textAlign="Center"/>
+                    </VBox>
+
+                    <!-- ============ FORMULARIO DE REGISTRO ============ -->
+                    <VBox id="formRegistro" visible="{vm>/mostrarRegistro}">
+
+                        <Title text="{i18n>registroTitle}" level="H2" class="sapUiSmallMarginBottom"/>
+
+                        <Label text="{i18n>registroNombreLabel}" required="true" labelFor="inputNombre"/>
+                        <Input
+                            id="inputNombre"
+                            placeholder="{i18n>registroNombrePlaceholder}"
+                            value="{vm>/registro/nombreCompleto}"
+                            valueState="{vm>/registro/nombreState}"
+                            valueStateText="{i18n>errCampoRequerido}"
+                            liveChange="onValidarRegistro"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Label text="{i18n>registroCorreoLabel}" required="true" labelFor="inputCorreoRegistro"/>
+                        <Input
+                            id="inputCorreoRegistro"
+                            type="Email"
+                            placeholder="{i18n>registroCorreoPlaceholder}"
+                            value="{vm>/registro/correo}"
+                            valueState="{vm>/registro/correoState}"
+                            valueStateText="{vm>/registro/correoStateText}"
+                            liveChange="onValidarRegistro"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Label text="{i18n>registroIdentificacionLabel}" required="true" labelFor="inputIdentificacion"/>
+                        <Input
+                            id="inputIdentificacion"
+                            placeholder="{i18n>registroIdentificacionPlaceholder}"
+                            value="{vm>/registro/numeroIdentificacion}"
+                            valueState="{vm>/registro/identificacionState}"
+                            valueStateText="{i18n>errCampoRequerido}"
+                            liveChange="onValidarRegistro"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Label text="{i18n>registroCargoLabel}" required="true" labelFor="inputCargo"/>
+                        <Input
+                            id="inputCargo"
+                            placeholder="{i18n>registroCargoPlaceholder}"
+                            value="{vm>/registro/cargo}"
+                            valueState="{vm>/registro/cargoState}"
+                            valueStateText="{i18n>errCampoRequerido}"
+                            liveChange="onValidarRegistro"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <MessageStrip
+                            text="{vm>/registro/mensajeError}"
+                            type="Error"
+                            showIcon="true"
+                            visible="{vm>/registro/mostrarError}"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <MessageStrip
+                            text="{i18n>msgRegistroExitoso}"
+                            type="Success"
+                            showIcon="true"
+                            visible="{vm>/registro/mostrarExito}"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <Button
+                            id="btnRegistrar"
+                            text="{i18n>btnRegistrar}"
+                            type="Emphasized"
+                            width="100%"
+                            enabled="{= !${vm>/registro/cargando} }"
+                            press="onRegistrar"
+                            class="sapUiSmallMarginBottom"/>
+
+                        <BusyIndicator visible="{vm>/registro/cargando}" class="sapUiSmallMarginBottom"/>
+
+                        <Link
+                            text="{i18n>linkVolverLogin}"
+                            press="onVolverLogin"
+                            textAlign="Center"/>
+                    </VBox>
+
+                </VBox>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

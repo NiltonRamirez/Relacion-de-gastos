@@ -1,0 +1,85 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.Main"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:f="sap.f"
+    displayBlock="true">
+    <Page id="mainPage" title="{i18n>dashboardTitle}" showNavButton="false">
+        <headerContent>
+            <Button icon="sap-icon://log" tooltip="{i18n>btnCerrarSesion}" press="onCerrarSesion"/>
+        </headerContent>
+        <content>
+            <VBox class="sapUiMediumMargin">
+
+                <!-- Saludo al usuario -->
+                <Title text="{= ${i18n>dashboardBienvenida}.replace('{0}', ${app>/usuario/nombreCompleto} || '') }"
+                       level="H2"
+                       class="sapUiSmallMarginBottom"/>
+
+                <!-- Aviso de modo offline -->
+                <MessageStrip
+                    text="{i18n>sinDatosOffline}"
+                    type="Warning"
+                    showIcon="true"
+                    visible="{= !${app>/enLinea} }"
+                    class="sapUiSmallMarginBottom"/>
+
+                <!-- ============ RESUMEN DEL MES ============ -->
+                <Panel headerText="{i18n>resumenTituloMes}" class="sapUiSmallMarginBottom">
+                    <l:Grid xmlns:l="sap.ui.layout" defaultSpan="L4 M4 S12">
+                        <l:content>
+                            <VBox class="resumenTile">
+                                <ObjectNumber number="{ path: 'app>/resumenMes/totalGastado', formatter: '.formatter.formatoMonedaCOP' }" emphasized="true"/>
+                                <Text text="{i18n>resumenTotalGastado}"/>
+                            </VBox>
+                            <VBox class="resumenTile">
+                                <ObjectNumber number="{app>/resumenMes/numeroGastos}" emphasized="true"/>
+                                <Text text="{i18n>resumenNumeroGastos}"/>
+                            </VBox>
+                            <VBox class="resumenTile">
+                                <ObjectNumber number="{app>/resumenMes/pendientesAprobacion}" emphasized="true" state="Critical"/>
+                                <Text text="{i18n>resumenPendientesAprobacion}"/>
+                            </VBox>
+                        </l:content>
+                    </l:Grid>
+                </Panel>
+
+                <!-- ============ TARJETAS DE ACCESO RÁPIDO ============ -->
+                <f:GridContainer>
+                    <f:layout>
+                        <f:GridContainerSettings rowSize="9rem" columnSize="9rem" gap="1rem"/>
+                    </f:layout>
+                    <f:items>
+
+                        <GenericTile class="dashboardCard" press="onAbrirRegistrarGasto" header="{i18n>cardRegistrarGasto}" subheader="{i18n>cardRegistrarGastoDesc}">
+                            <TileContent>
+                                <ImageContent src="sap-icon://add-document"/>
+                            </TileContent>
+                        </GenericTile>
+
+                        <GenericTile class="dashboardCard" press="onAbrirMisGastos" header="{i18n>cardMisGastos}" subheader="{i18n>cardMisGastosDesc}">
+                            <TileContent>
+                                <ImageContent src="sap-icon://list"/>
+                            </TileContent>
+                        </GenericTile>
+
+                        <GenericTile class="dashboardCard" press="onAbrirMisGastos" header="{i18n>cardConsultarEstados}" subheader="{i18n>cardConsultarEstadosDesc}">
+                            <TileContent>
+                                <ImageContent src="sap-icon://status-in-process"/>
+                            </TileContent>
+                        </GenericTile>
+
+                        <!-- Tarjeta visible solo para el rol Analista financiero -->
+                        <GenericTile class="dashboardCard" press="onAbrirRevisionPendiente" header="{i18n>cardRevisionPendiente}" subheader="{i18n>cardRevisionPendienteDesc}" visible="{app>/esAnalista}">
+                            <TileContent unit="">
+                                <NumericContent value="{app>/resumenMes/pendientesAprobacion}" icon="sap-icon://approvals" withMargin="false"/>
+                            </TileContent>
+                        </GenericTile>
+
+                    </f:items>
+                </f:GridContainer>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

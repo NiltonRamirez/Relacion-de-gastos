@@ -1,0 +1,160 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.ListaGastos"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    displayBlock="true">
+    <Page id="listaGastosPage" title="{i18n>listaGastosTitle}" showNavButton="true" navButtonPress="onVolver">
+        <content>
+            <VBox class="sapUiMediumMargin" busy="{vm>/cargando}" busyIndicatorDelay="0">
+
+                <!-- ============ PANEL DE FILTROS ============ -->
+                <Panel headerText="{i18n>filtrosTitulo}" expandable="true" expanded="false" class="sapUiSmallMarginBottom">
+                    <f:SimpleForm editable="true" layout="ResponsiveGridLayout" labelSpanL="3" labelSpanM="4" emptySpanL="0" emptySpanM="0" columnsL="2" columnsM="1">
+                        <f:content>
+
+                            <Label text="{i18n>filtroFechaDesde}"/>
+                            <DatePicker
+                                value="{path: 'vm>/filtros/fechaDesde', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
+                                displayFormat="dd/MM/yyyy"
+                                width="100%"/>
+
+                            <Label text="{i18n>filtroFechaHasta}"/>
+                            <DatePicker
+                                value="{path: 'vm>/filtros/fechaHasta', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
+                                displayFormat="dd/MM/yyyy"
+                                width="100%"/>
+
+                            <Label text="{i18n>filtroCategoria}"/>
+                            <Select selectedKey="{vm>/filtros/categoria}" width="100%">
+                                <core:Item key="" text="{i18n>estadoTodos}"/>
+                                <core:Item key="Hospedaje" text="{i18n>optHospedaje}"/>
+                                <core:Item key="Alimentacion" text="{i18n>optAlimentacion}"/>
+                                <core:Item key="Transporte" text="{i18n>optTransporte}"/>
+                                <core:Item key="Otros" text="{i18n>optOtros}"/>
+                            </Select>
+
+                            <Label text="{i18n>filtroEstado}"/>
+                            <Select selectedKey="{vm>/filtros/estado}" width="100%">
+                                <core:Item key="" text="{i18n>estadoTodos}"/>
+                                <core:Item key="Registrado" text="{i18n>estadoRegistrado}"/>
+                                <core:Item key="En revision" text="{i18n>estadoEnRevision}"/>
+                                <core:Item key="Aprobado" text="{i18n>estadoAprobado}"/>
+                                <core:Item key="Rechazado" text="{i18n>estadoRechazado}"/>
+                            </Select>
+
+                            <Label text="{i18n>filtroMontoMinimo}"/>
+                            <Input value="{vm>/filtros/montoMinimo}" type="Number" width="100%"/>
+
+                            <Label text="{i18n>filtroMontoMaximo}"/>
+                            <Input value="{vm>/filtros/montoMaximo}" type="Number" width="100%"/>
+
+                        </f:content>
+                    </f:SimpleForm>
+
+                    <HBox class="sapUiSmallMargin">
+                        <Button text="{i18n>btnAplicarFiltros}" type="Emphasized" icon="sap-icon://filter" press="onAplicarFiltros" class="sapUiTinyMarginEnd"/>
+                        <Button text="{i18n>btnLimpiarFiltros}" icon="sap-icon://clear-filter" press="onLimpiarFiltros"/>
+                    </HBox>
+                </Panel>
+
+                <!-- ============ TABLA DE GASTOS ============ -->
+                <Table
+                    id="tablaGastos"
+                    items="{vm>/gastos}"
+                    growing="true"
+                    growingThreshold="20"
+                    noDataText="{i18n>listaGastosVacia}">
+                    <columns>
+                        <Column><Text text="{i18n>colFecha}"/></Column>
+                        <Column><Text text="{i18n>colEstablecimiento}"/></Column>
+                        <Column><Text text="{i18n>colCategoria}"/></Column>
+                        <Column hAlign="End"><Text text="{i18n>colTotal}"/></Column>
+                        <Column><Text text="{i18n>colEstado}"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem type="Navigation" press="onAbrirDetalle">
+                            <cells>
+                                <Text text="{ path: 'vm>fechaEmision', formatter: '.formatter.formatoFechaCO' }"/>
+                                <Text text="{vm>nombreEstablecimiento}"/>
+                                <Text text="{vm>categoriaGasto}"/>
+                                <ObjectNumber number="{ path: 'vm>total', formatter: '.formatter.formatoMonedaCOP' }"/>
+                                <ObjectStatus
+                                    text="{vm>estado}"
+                                    state="{ path: 'vm>estado', formatter: '.formatter.estadoAValueState' }"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+
+            </VBox>
+        </content>
+
+        <!-- ============ DIÁLOGO: DETALLE COMPLETO DEL GASTO ============ -->
+        <dependents>
+            <Dialog
+                id="dialogoDetalle"
+                title="{i18n>detalleGastoTitle}"
+                contentWidth="32rem">
+                <content>
+                    <VBox class="sapUiMediumMargin">
+                        <f:SimpleForm editable="false" layout="ResponsiveGridLayout" labelSpanL="5" labelSpanM="5" emptySpanL="0" emptySpanM="0" columnsL="1" columnsM="1">
+                            <f:content>
+
+                                <Label text="{i18n>colFecha}"/>
+                                <Text text="{ path: 'vm>/gastoSeleccionado/fechaEmision', formatter: '.formatter.formatoFechaCO' }"/>
+
+                                <Label text="{i18n>lblNombreEstablecimiento}"/>
+                                <Text text="{vm>/gastoSeleccionado/nombreEstablecimiento}"/>
+
+                                <Label text="{i18n>lblRazonSocial}"/>
+                                <Text text="{vm>/gastoSeleccionado/razonSocialProveedor}"/>
+
+                                <Label text="{i18n>lblNitProveedor}"/>
+                                <Text text="{vm>/gastoSeleccionado/nitProveedor}"/>
+
+                                <Label text="{i18n>lblNumeroFactura}"/>
+                                <Text text="{vm>/gastoSeleccionado/numeroFactura}"/>
+
+                                <Label text="{i18n>colCategoria}"/>
+                                <Text text="{vm>/gastoSeleccionado/categoriaGasto}"/>
+
+                                <Label text="{i18n>lblFormaPago}"/>
+                                <Text text="{vm>/gastoSeleccionado/formaPago}"/>
+
+                                <Label text="{i18n>lblDescripcionConsumo}"/>
+                                <Text text="{vm>/gastoSeleccionado/descripcionConsumo}"/>
+
+                                <Label text="{i18n>colTotal}"/>
+                                <ObjectNumber number="{ path: 'vm>/gastoSeleccionado/total', formatter: '.formatter.formatoMonedaCOP' }" emphasized="true"/>
+
+                                <Label text="{i18n>colEstado}"/>
+                                <ObjectStatus
+                                    text="{vm>/gastoSeleccionado/estado}"
+                                    state="{ path: 'vm>/gastoSeleccionado/estado', formatter: '.formatter.estadoAValueState' }"/>
+
+                            </f:content>
+                        </f:SimpleForm>
+
+                        <!-- Motivo de rechazo (solo analista) -->
+                        <VBox visible="{vm>/mostrarMotivoRechazo}" class="sapUiSmallMarginTop">
+                            <Label text="{i18n>motivoRechazoTitulo}" required="true"/>
+                            <TextArea value="{vm>/motivoRechazo}" rows="3" placeholder="{i18n>motivoRechazoPlaceholder}" width="100%"/>
+                        </VBox>
+
+                    </VBox>
+                </content>
+                <buttons>
+                    <Button text="{i18n>btnDescargarFactura}" icon="sap-icon://download" press="onDescargarFactura"/>
+
+                    <!-- Botones de aprobación visibles solo para analistas financieros -->
+                    <Button text="{i18n>btnAprobar}" type="Accept" icon="sap-icon://accept" press="onAprobarGasto" visible="{app>/esAnalista}"/>
+                    <Button text="{i18n>btnRechazar}" type="Reject" icon="sap-icon://decline" press="onRechazarGasto" visible="{app>/esAnalista}"/>
+
+                    <Button text="{i18n>btnCerrar}" press="onCerrarDetalle"/>
+                </buttons>
+            </Dialog>
+        </dependents>
+    </Page>
+</mvc:View>

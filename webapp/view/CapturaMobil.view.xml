@@ -1,0 +1,95 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.CapturaMobil"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <Page id="capturaMobilPage" title="{i18n>capturaTitle}" showNavButton="true" navButtonPress="onVolver">
+        <content>
+            <VBox class="sapUiMediumMargin" alignItems="Center">
+
+                <!-- ============ ESTADO: SIN IMAGEN CAPTURADA ============ -->
+                <VBox visible="{= !${vm>/imagenCapturada} &amp;&amp; !${vm>/procesando} }" alignItems="Center">
+                    <Text text="{i18n>capturaInstrucciones}" textAlign="Center" class="sapUiSmallMarginBottom"/>
+
+                    <!-- Contenedor del video de la cámara -->
+                    <Box class="camaraContainer sapUiSmallMarginBottom">
+                        <core:HTML id="videoContainer" content="&lt;video id='videoCamara' class='camaraPreview' autoplay playsinline muted&gt;&lt;/video&gt;"/>
+                    </Box>
+
+                    <Button
+                        id="btnCapturarCamara"
+                        text="{i18n>btnCapturarCamara}"
+                        type="Emphasized"
+                        icon="sap-icon://camera"
+                        press="onCapturarFoto"
+                        width="100%"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <MessageStrip
+                        text="{i18n>errCamaraNoDisponible}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{vm>/errorCamara}"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <Link text="{i18n>btnUsarArchivoInstead}" press="onUsarArchivo"/>
+                </VBox>
+
+                <!-- ============ ESTADO: VISTA PREVIA DE IMAGEN CAPTURADA ============ -->
+                <VBox visible="{= !!${vm>/imagenCapturada} &amp;&amp; !${vm>/procesando} }" alignItems="Center" width="100%">
+                    <Box class="camaraContainer sapUiSmallMarginBottom">
+                        <core:HTML id="previewContainer" content="{vm>/htmlPreview}"/>
+                    </Box>
+
+                    <!-- Indicador visual de calidad de imagen -->
+                    <ObjectStatus
+                        text="{i18n>calidadBuena}"
+                        icon="sap-icon://message-success"
+                        state="Success"
+                        visible="{vm>/calidadBuena}"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <MessageStrip
+                        text="{i18n>calidadMala}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{= !${vm>/calidadBuena} }"
+                        class="sapUiSmallMarginBottom"/>
+
+                    <HBox width="100%">
+                        <Button
+                            text="{i18n>btnReintentar}"
+                            icon="sap-icon://camera"
+                            press="onReintentar"
+                            width="50%"
+                            class="sapUiTinyMarginEnd"/>
+                        <Button
+                            text="{i18n>btnUsarImagen}"
+                            type="Emphasized"
+                            icon="sap-icon://accept"
+                            enabled="{vm>/calidadBuena}"
+                            press="onUsarImagen"
+                            width="50%"/>
+                    </HBox>
+                </VBox>
+
+                <!-- ============ ESTADO: PROCESANDO OCR ============ -->
+                <VBox visible="{vm>/procesando}" alignItems="Center" justifyContent="Center" class="sapUiLargeMarginTop">
+                    <BusyIndicator size="3rem" class="sapUiMediumMarginBottom"/>
+                    <Title text="{i18n>procesandoFactura}" level="H3" class="sapUiSmallMarginBottom"/>
+                    <Text text="{i18n>procesandoFacturaDesc}" textAlign="Center"/>
+                </VBox>
+
+                <!-- Mensaje de error general (API / conexión) -->
+                <MessageStrip
+                    text="{vm>/mensajeError}"
+                    type="Error"
+                    showIcon="true"
+                    visible="{vm>/mostrarError}"
+                    class="sapUiMediumMarginTop"/>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

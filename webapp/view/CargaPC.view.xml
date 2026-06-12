@@ -1,0 +1,96 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.CargaPC"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:u="sap.ui.unified"
+    displayBlock="true">
+    <Page id="cargaPCPage" title="{i18n>cargaPCTitle}" showNavButton="true" navButtonPress="onVolver">
+        <content>
+            <VBox class="sapUiMediumMargin">
+
+                <!-- ============ ZONA DRAG & DROP ============ -->
+                <VBox visible="{= !${vm>/procesando} }">
+
+                    <core:HTML id="dropZoneHtml"
+                        content="&lt;div id='zonaDropArchivo' class='dropZone'&gt;&lt;/div&gt;"
+                        afterRendering="onDropZoneRenderizada"/>
+
+                    <VBox alignItems="Center" class="sapUiSmallMarginTop">
+                        <core:Icon src="sap-icon://upload-to-cloud" size="2.5rem" class="sapUiSmallMarginBottom"/>
+                        <Text text="{i18n>dropZoneTexto}" textAlign="Center"/>
+                        <Text text="{i18n>dropZoneSubtexto}" textAlign="Center" class="sapUiTinyMarginBottom"/>
+                        <Text text="{i18n>dropZoneFormatos}" textAlign="Center" class="sapUiTinyMarginTop"/>
+                    </VBox>
+
+                    <!-- Input de archivo oculto, activado mediante el botón "Seleccionar archivo" -->
+                    <u:FileUploader
+                        id="fileUploader"
+                        visible="false"
+                        fileType="pdf,xml"
+                        mimeType="application/pdf,text/xml,application/xml"
+                        change="onArchivoSeleccionado"/>
+
+                    <Button
+                        id="btnSeleccionarArchivo"
+                        text="{i18n>btnSeleccionarArchivo}"
+                        type="Emphasized"
+                        icon="sap-icon://attachment"
+                        press="onAbrirSelectorArchivo"
+                        class="sapUiMediumMarginTop"/>
+
+                    <!-- Información del archivo seleccionado -->
+                    <Panel headerText="{i18n>archivoSeleccionado}" visible="{vm>/archivoSeleccionado}" class="sapUiMediumMarginTop">
+                        <VBox class="sapUiSmallMargin">
+                            <ObjectStatus text="{vm>/nombreArchivo}" icon="sap-icon://document" state="None"/>
+                            <Text text="{vm>/tamanoArchivo}"/>
+                        </VBox>
+                    </Panel>
+
+                    <!-- Mensajes de validación de formato/tamaño -->
+                    <MessageStrip
+                        text="{i18n>errFormatoInvalido}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{vm>/errorFormato}"
+                        class="sapUiMediumMarginTop"/>
+
+                    <MessageStrip
+                        text="{i18n>errTamanoExcedido}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{vm>/errorTamano}"
+                        class="sapUiMediumMarginTop"/>
+
+                    <!-- Barra de progreso de carga -->
+                    <VBox visible="{vm>/subiendo}" class="sapUiMediumMarginTop">
+                        <Text text="{i18n>subiendoArchivo}" class="sapUiTinyMarginBottom"/>
+                        <ProgressIndicator percentValue="{vm>/porcentajeCarga}" displayValue="{vm>/porcentajeCarga}%" showValue="true" state="Information"/>
+                    </VBox>
+
+                    <!-- Mensaje de error general -->
+                    <MessageStrip
+                        text="{vm>/mensajeError}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{vm>/mostrarError}"
+                        class="sapUiMediumMarginTop"/>
+                </VBox>
+
+                <!-- ============ ESTADO: PROCESANDO OCR ============ -->
+                <VBox visible="{vm>/procesando}" alignItems="Center" justifyContent="Center" class="sapUiLargeMarginTop">
+                    <BusyIndicator size="3rem" class="sapUiMediumMarginBottom"/>
+                    <Title text="{i18n>procesandoArchivo}" level="H3" class="sapUiSmallMarginBottom"/>
+                    <ProgressIndicator
+                        percentValue="{vm>/porcentajeCarga}"
+                        displayValue="{vm>/porcentajeCarga}%"
+                        showValue="true"
+                        state="Information"
+                        width="100%"
+                        class="sapUiMediumMarginTop"/>
+                </VBox>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

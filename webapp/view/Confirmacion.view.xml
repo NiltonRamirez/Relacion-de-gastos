@@ -1,0 +1,65 @@
+<mvc:View
+    controllerName="com.ccb.viaticos.controller.Confirmacion"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
+    xmlns:f="sap.ui.layout.form"
+    displayBlock="true">
+    <Page id="confirmacionPage" title="{i18n>confirmacionTitle}" showNavButton="false">
+        <content>
+            <VBox class="sapUiLargeMargin" alignItems="Center">
+
+                <!-- Ícono de éxito -->
+                <core:Icon src="sap-icon://message-success" size="4rem" class="confirmacionIcono sapUiMediumMarginBottom"/>
+
+                <Title text="{i18n>confirmacionMensaje}" level="H2" textAlign="Center" class="sapUiSmallMarginBottom"/>
+
+                <!-- Número de transacción (formato BTP-TV-YYYY-XXXXXXX) -->
+                <ObjectStatus
+                    title="{i18n>confirmacionNumeroTransaccion}"
+                    text="{vm>/numeroTransaccion}"
+                    state="Success"
+                    class="sapUiMediumMarginBottom"/>
+
+                <!-- Resumen compacto del gasto registrado -->
+                <Panel headerText="{i18n>confirmacionResumenTitulo}" width="100%" class="sapUiMediumMarginBottom">
+                    <f:SimpleForm editable="false" layout="ResponsiveGridLayout" labelSpanL="5" labelSpanM="5" emptySpanL="0" emptySpanM="0" columnsL="1" columnsM="1">
+                        <f:content>
+
+                            <Label text="{i18n>confirmacionProveedor}"/>
+                            <Text text="{vm>/proveedor}"/>
+
+                            <Label text="{i18n>confirmacionCategoria}"/>
+                            <Text text="{vm>/categoria}"/>
+
+                            <Label text="{i18n>confirmacionTotal}"/>
+                            <ObjectNumber number="{ path: 'vm>/total', formatter: '.formatter.formatoMonedaCOP' }" emphasized="true"/>
+
+                            <Label text="{i18n>confirmacionFecha}"/>
+                            <Text text="{ path: 'vm>/fecha', formatter: '.formatter.formatoFechaCO' }"/>
+
+                        </f:content>
+                    </f:SimpleForm>
+                </Panel>
+
+                <!-- ============ BOTONES DE ACCIÓN ============ -->
+                <HBox width="100%">
+                    <Button
+                        text="{i18n>btnRegistrarOtro}"
+                        type="Emphasized"
+                        icon="sap-icon://add-document"
+                        press="onRegistrarOtro"
+                        width="50%"
+                        class="sapUiTinyMarginEnd"/>
+                    <Button
+                        text="{i18n>btnVerMisGastos}"
+                        icon="sap-icon://list"
+                        press="onVerMisGastos"
+                        width="50%"/>
+                </HBox>
+
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>
