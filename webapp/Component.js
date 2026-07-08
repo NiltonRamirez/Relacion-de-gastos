@@ -3,9 +3,8 @@ sap.ui.define([
     "sap/ui/Device",
     "sap/ui/model/json/JSONModel",
     "com/ccb/viaticos/service/ApiService",
-    "com/ccb/viaticos/service/AuthService",
     "com/ccb/viaticos/model/GastoModel"
-], function (UIComponent, Device, JSONModel, ApiService, AuthService, GastoModel) {
+], function (UIComponent, Device, JSONModel, ApiService, GastoModel) {
     "use strict";
 
     return UIComponent.extend("com.ccb.viaticos.Component", {
@@ -24,14 +23,15 @@ sap.ui.define([
             // Modelo del dispositivo (para responsive: phone/tablet/desktop)
             this.setModel(new JSONModel(Device), "device");
 
-            // Servicios centralizados: autenticación y llamadas a CPI
-            this._oAuthService = new AuthService();
-            this._oApiService = new ApiService(this._oAuthService);
+            // Servicio centralizado de llamadas a CPI.
+            // La autenticación la realiza IAS de forma externa (approuter),
+            // por lo que la app no maneja credenciales ni tokens propios.
+            this._oApiService = new ApiService();
 
-            // Modelo "app": estado global de la aplicación (sesión, dashboard, etc.)
+            // Modelo "app": estado global de la aplicación (usuario, dashboard, etc.)
             var oAppModel = new JSONModel({
-                usuario: this._oAuthService.getUsuario(),
-                autenticado: this._oAuthService.estaAutenticado(),
+                usuario: null,
+                esAnalista: false,
                 enLinea: navigator.onLine,
                 resumenMes: {
                     totalGastado: 0,
@@ -50,8 +50,30 @@ sap.ui.define([
             // Escuchar cambios de conectividad para sincronización offline
             this._registrarEventosConectividad();
 
+            // Cargar los datos del usuario autenticado por IAS
+            this._cargarUsuarioActual();
+
             // Inicializar el enrutador
             this.getRouter().initialize();
+        },
+
+        /**
+         * Obtiene la información del usuario autenticado desde el backend
+         * (la sesión ya viene establecida por IAS a través del approuter)
+         * Endpoint: GET /http/api/v1/usuarios/me
+         * @private
+         */
+        _cargarUsuarioActual: function () {
+            var oAppModel = this.getModel("app");
+            this._oApiService.get("/api/v1/usuarios/me")
+                .then(function (oUsuario) {
+                    oAppModel.setProperty("/usuario", oUsuario);
+                    oAppModel.setProperty("/esAnalista", !!oUsuario && oUsuario.rol === "analista");
+                })
+                .catch(function () {
+                    // Si falla la consulta se mantiene el estado por defecto
+                    // (sin datos de usuario y sin rol de analista)
+                });
         },
 
         /**
@@ -60,14 +82,6 @@ sap.ui.define([
          */
         getApiService: function () {
             return this._oApiService;
-        },
-
-        /**
-         * Devuelve la instancia del servicio de autenticación
-         * @returns {com.ccb.viaticos.service.AuthService} servicio de autenticación
-         */
-        getAuthService: function () {
-            return this._oAuthService;
         },
 
         /**

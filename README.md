@@ -23,8 +23,7 @@ webapp/
 │   ├── GastoModel.js        # Reglas de negocio del "gasto" (cálculos, topes, catálogos)
 │   └── formatter.js         # Formateadores de UI (moneda COP, fechas, estados)
 ├── service/
-│   ├── ApiService.js         # Cliente HTTP centralizado hacia CPI (fetch/XHR, CSRF, multipart)
-│   └── AuthService.js        # Login/registro y sesión (JWT en sessionStorage)
+│   └── ApiService.js         # Cliente HTTP centralizado hacia CPI (fetch/XHR, CSRF, multipart)
 ├── i18n/                    # Textos en español (Colombia)
 └── css/style.css
 ```
@@ -34,18 +33,19 @@ webapp/
 | Modelo      | Tipo         | Contenido                                                          |
 |-------------|--------------|---------------------------------------------------------------------|
 | `device`    | JSONModel    | `sap.ui.Device` — para lógica responsive (phone/tablet/desktop)     |
-| `app`       | JSONModel    | Sesión del usuario, estado online/offline, resumen mensual del dashboard |
+| `app`       | JSONModel    | Usuario autenticado (IAS), rol analista, estado online/offline, resumen mensual del dashboard |
 | `gasto`     | JSONModel    | Lote de facturas en captura/revisión (`GastoModel.crearLoteVacio()`) |
 | `""` (default) | JSONModel | Datos "de paso" entre vistas (filtros, resultados de registro)     |
 | `i18n`      | ResourceModel | Textos de la app                                                    |
 
-### Servicios centralizados
+### Autenticación y servicios centralizados
 
-- **`AuthService`** — login/registro contra CPI, guarda el JWT y los datos del usuario
-  en `sessionStorage` (`viaticos.authToken`, `viaticos.userInfo`), expone `esAnalista()`
-  para diferenciar el rol Empleado vs Analista financiero.
+- **Autenticación externa vía IAS**: la app no tiene pantalla de login ni maneja
+  credenciales/tokens propios. El approuter establece la sesión autenticada con IAS
+  antes de servir la app; el `Component` obtiene los datos del usuario con
+  `GET /api/v1/usuarios/me` y publica `usuario` y `esAnalista` en el modelo `app`.
 - **`ApiService`** — wrapper sobre `fetch`/`XMLHttpRequest`:
-  - Antepone `Bearer <token>` a las peticiones autenticadas.
+  - Las peticiones viajan con la sesión establecida por la plataforma (IAS/approuter).
   - Obtiene y cachea un token CSRF (`X-CSRF-Token: Fetch`) antes de cualquier POST.
   - `get/post/postFormData/descargarArchivo` con manejo uniforme de errores (401 → sesión expirada).
   - Todas las rutas son relativas a `/http/...`, que en tiempo de ejecución se resuelve
@@ -57,9 +57,7 @@ El router es `sap.m.routing.Router` sobre un único `sap.m.App` (`view/App.view.
 que apila páginas. Flujo típico de un empleado:
 
 ```
-RouteLogin ("")                  → Login.view.xml       (login / registro)
-   ↓ onIngresar exitoso
-RouteMain ("main")                → Main.view.xml         (Dashboard)
+RouteMain ("")                    → Main.view.xml         (Dashboard)
    ↓ onAbrirRegistrarGasto
 RouteCapturaMobil / RouteCargaPC  → captura por cámara o carga de PDF/XML
    ↓ OCR completado (polling)
@@ -72,8 +70,7 @@ RouteListaGastos ("gastos")        → historial / aprobación (rol Analista)
 
 | Ruta | Vista | Rol/objetivo |
 |---|---|---|
-| `RouteLogin` | `Login` | Autenticación y alta de usuario corporativo |
-| `RouteMain` | `Main` | Dashboard: resumen del mes, accesos rápidos, acceso a "Revisión pendiente" solo si `app>/esAnalista` |
+| `RouteMain` | `Main` | Dashboard (ruta inicial): resumen del mes, accesos rápidos, acceso a "Revisión pendiente" solo si `app>/esAnalista` |
 | `RouteCapturaMobil` | `CapturaMobil` | Captura de facturas con la cámara del dispositivo (`getUserMedia`) |
 | `RouteCargaPC` | `CargaPC` | Carga de PDF/XML por drag&drop o selector de archivos |
 | `RouteRevisionDatos` | `RevisionDatos` | Edición asistida de los datos extraídos por OCR, cálculo de IVA/total, validación de topes y DIAN |
@@ -118,12 +115,13 @@ Todos los endpoints de backend consumidos están documentados en el encabezado d
     Foundry directo, o como servicio `destination` en `mta.yaml` para despliegue BTP).
   - `^/resources/(.*)$` y `^/test-resources/(.*)$` → CDN de UI5 (destino `ui5`, sin auth).
   - Resto de rutas → `html5-apps-repo-rt` (contenido de la propia app), con autenticación XSUAA.
+- **Autenticación**: la realiza **IAS de manera externa** (approuter); la app no
+  tiene módulo de login propio.
 - **Autorización**: `xs-security.json` define dos scopes (`User`, `Analyst`) y dos
   role collections desplegables (`ViaticosEmpleado`, `ViaticosAnalistaFinanciero`). El
-  rol se refleja en el front únicamente vía `AuthService.esAnalista()` (basado en
-  `usuario.rol` devuelto por `/auth/login`), **no hay chequeo de scopes XSUAA en el
-  cliente** — la autorización real debe reforzarse en CPI/backend.
-- **Sesión**: JWT guardado en `sessionStorage` (se pierde al cerrar la pestaña).
+  rol se refleja en el front únicamente vía `app>/esAnalista` (basado en
+  `usuario.rol` devuelto por `GET /api/v1/usuarios/me`), **no hay chequeo de scopes
+  XSUAA en el cliente** — la autorización real debe reforzarse en CPI/backend.
 
 ## 5. Cómo ejecutar y desplegar
 

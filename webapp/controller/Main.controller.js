@@ -20,16 +20,12 @@ sap.ui.define([
         },
 
         /**
-         * Se ejecuta al navegar al Dashboard: refresca resumen y rol del usuario
+         * Se ejecuta al navegar al Dashboard: refresca el resumen mensual.
+         * El usuario y su rol los carga el Component desde /api/v1/usuarios/me
+         * (autenticación externa vía IAS).
          * @private
          */
         _onRoutePatternMatched: function () {
-            var oAppModel = this.getOwnerComponent().getModel("app");
-            var oAuthService = this.getOwnerComponent().getAuthService();
-
-            // Determinar si el usuario autenticado es analista financiero
-            oAppModel.setProperty("/esAnalista", oAuthService.esAnalista());
-
             this._cargarResumenMensual();
         },
 
@@ -119,20 +115,6 @@ sap.ui.define([
             // La vista ListaGastos detecta el rol y aplica el filtro "En revisión" automáticamente
             var oModel = this.getOwnerComponent().getModel();
             oModel.setProperty("/filtroInicialPendientes", true);
-        },
-
-        /**
-         * Cierra la sesión del usuario y regresa a la pantalla de Login
-         */
-        onCerrarSesion: function () {
-            var oAuthService = this.getOwnerComponent().getAuthService();
-            oAuthService.cerrarSesion();
-
-            var oAppModel = this.getOwnerComponent().getModel("app");
-            oAppModel.setProperty("/usuario", null);
-            oAppModel.setProperty("/autenticado", false);
-
-            this.getOwnerComponent().getRouter().navTo("RouteLogin");
         },
 
         /**

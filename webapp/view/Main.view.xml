@@ -5,9 +5,6 @@
     xmlns:f="sap.f"
     displayBlock="true">
     <Page id="mainPage" title="{i18n>dashboardTitle}" showNavButton="false">
-        <headerContent>
-            <Button icon="sap-icon://log" tooltip="{i18n>btnCerrarSesion}" press="onCerrarSesion"/>
-        </headerContent>
         <content>
             <VBox class="sapUiMediumMargin">
 

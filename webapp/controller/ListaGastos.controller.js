@@ -44,10 +44,10 @@ sap.ui.define([
          */
         _onRoutePatternMatched: function () {
             var oModel = this.getOwnerComponent().getModel();
-            var oAuthService = this.getOwnerComponent().getAuthService();
+            var oAppModel = this.getOwnerComponent().getModel("app");
             var oViewModel = this.getView().getModel("vm");
 
-            if (oModel.getProperty("/filtroInicialPendientes") && oAuthService.esAnalista()) {
+            if (oModel.getProperty("/filtroInicialPendientes") && oAppModel.getProperty("/esAnalista")) {
                 oViewModel.setProperty("/filtros/estado", "En revision");
                 oModel.setProperty("/filtroInicialPendientes", false);
             }
@@ -68,13 +68,13 @@ sap.ui.define([
         _cargarGastos: function () {
             var oViewModel = this.getView().getModel("vm");
             var oApiService = this.getOwnerComponent().getApiService();
-            var oAuthService = this.getOwnerComponent().getAuthService();
+            var oAppModel = this.getOwnerComponent().getModel("app");
             var oFiltros = oViewModel.getProperty("/filtros");
 
             oViewModel.setProperty("/cargando", true);
 
             var sEndpoint = "/api/v1/gastos";
-            if (oAuthService.esAnalista() && oFiltros.estado === "En revision") {
+            if (oAppModel.getProperty("/esAnalista") && oFiltros.estado === "En revision") {
                 sEndpoint = "/api/v1/gastos/pendientes";
             }
 

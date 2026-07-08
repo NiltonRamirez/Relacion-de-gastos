@@ -10,10 +10,12 @@ sap.ui.define([
      * xs-app.json bajo el prefijo "/http/", el mismo patrón de conectividad
      * utilizado por la app de gestión de cupos (fiori-quota-app).
      *
+     * La autenticación la realiza IAS de forma externa (approuter), por lo
+     * que las peticiones viajan con la sesión establecida por la plataforma
+     * y este servicio no maneja tokens propios.
+     *
      * Endpoints expuestos por CPI (rutas relativas a /http/):
-     *   POST /api/v1/auth/login
-     *   POST /api/v1/auth/registro
-     *   GET  /api/v1/usuarios/me
+     *   GET  /api/v1/usuarios/me                  (datos del usuario autenticado por IAS)
      *   POST /api/v1/facturas/capturar           (multipart/form-data - una o varias imágenes de cámara,
      *                                              campo "archivos" repetido; respuesta: arreglo "jobs")
      *   POST /api/v1/facturas/cargar              (multipart/form-data - uno o varios PDF / XML,
@@ -35,10 +37,9 @@ sap.ui.define([
      */
     return BaseObject.extend("com.ccb.viaticos.service.ApiService", {
 
-        constructor: function (oAuthService) {
+        constructor: function () {
             // sap.ui.require.toUrl incluye el prefijo del HTML5 repo automáticamente en Work Zone
             this._sBaseUrl = sap.ui.require.toUrl("com/ccb/viaticos") + "/http";
-            this._oAuthService = oAuthService;
             this._sCsrfToken = null;
         },
 
@@ -51,22 +52,14 @@ sap.ui.define([
         },
 
         /**
-         * Construye los headers comunes de autenticación (token JWT en sessionStorage)
-         * @param {boolean} bConToken - si debe incluir el header Authorization
+         * Construye los headers comunes de las peticiones JSON
          * @returns {object} headers HTTP
          * @private
          */
-        _construirHeaders: function (bConToken) {
-            var oHeaders = {
+        _construirHeaders: function () {
+            return {
                 "Content-Type": "application/json"
             };
-            if (bConToken !== false && this._oAuthService) {
-                var sToken = this._oAuthService.getToken();
-                if (sToken) {
-                    oHeaders["Authorization"] = "Bearer " + sToken;
-                }
-            }
-            return oHeaders;
         },
 
         /**
@@ -80,7 +73,7 @@ sap.ui.define([
             }
             return fetch(this._sBaseUrl + "/api/v1/usuarios/me", {
                 method: "GET",
-                headers: Object.assign(this._construirHeaders(true), { "X-CSRF-Token": "Fetch" })
+                headers: Object.assign(this._construirHeaders(), { "X-CSRF-Token": "Fetch" })
             }).then(function (oRespuesta) {
                 var sToken = oRespuesta.headers.get("X-CSRF-Token");
                 this._sCsrfToken = sToken || null;
@@ -93,14 +86,12 @@ sap.ui.define([
         /**
          * Realiza una petición GET
          * @param {string} sRuta - ruta relativa (ej. "/api/v1/gastos")
-         * @param {object} [oOpciones] - { conToken: boolean }
          * @returns {Promise<object>} respuesta JSON
          */
-        get: function (sRuta, oOpciones) {
-            oOpciones = oOpciones || {};
+        get: function (sRuta) {
             return fetch(this._sBaseUrl + sRuta, {
                 method: "GET",
-                headers: this._construirHeaders(oOpciones.conToken)
+                headers: this._construirHeaders()
             }).then(this._procesarRespuesta.bind(this));
         },
 
@@ -108,13 +99,11 @@ sap.ui.define([
          * Realiza una petición POST con cuerpo JSON
          * @param {string} sRuta - ruta relativa
          * @param {object} oCuerpo - cuerpo de la petición
-         * @param {object} [oOpciones] - { conToken: boolean }
          * @returns {Promise<object>} respuesta JSON
          */
-        post: function (sRuta, oCuerpo, oOpciones) {
-            oOpciones = oOpciones || {};
+        post: function (sRuta, oCuerpo) {
             return this._obtenerCsrfToken().then(function (sCsrf) {
-                var oHeaders = this._construirHeaders(oOpciones.conToken);
+                var oHeaders = this._construirHeaders();
                 if (sCsrf) {
                     oHeaders["X-CSRF-Token"] = sCsrf;
                 }
@@ -140,12 +129,6 @@ sap.ui.define([
                     var oXhr = new XMLHttpRequest();
                     oXhr.open("POST", this._sBaseUrl + sRuta, true);
 
-                    if (this._oAuthService) {
-                        var sToken = this._oAuthService.getToken();
-                        if (sToken) {
-                            oXhr.setRequestHeader("Authorization", "Bearer " + sToken);
-                        }
-                    }
                     if (sCsrf) {
                         oXhr.setRequestHeader("X-CSRF-Token", sCsrf);
                     }
@@ -193,7 +176,7 @@ sap.ui.define([
         descargarArchivo: function (sRuta) {
             return fetch(this._sBaseUrl + sRuta, {
                 method: "GET",
-                headers: this._construirHeaders(true)
+                headers: this._construirHeaders()
             }).then(function (oRespuesta) {
                 if (!oRespuesta.ok) {
                     return Promise.reject({ status: oRespuesta.status, message: "No fue posible descargar el archivo" });

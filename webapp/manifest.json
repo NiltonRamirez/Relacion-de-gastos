@@ -103,13 +103,8 @@
       },
       "routes": [
         {
-          "name": "RouteLogin",
-          "pattern": "",
-          "target": ["TargetLogin"]
-        },
-        {
           "name": "RouteMain",
-          "pattern": "main",
+          "pattern": "",
           "target": ["TargetMain"]
         },
         {
@@ -139,13 +134,6 @@
         }
       ],
       "targets": {
-        "TargetLogin": {
-          "viewType": "XML",
-          "transition": "fade",
-          "clearControlAggregation": false,
-          "viewId": "Login",
-          "viewName": "Login"
-        },
         "TargetMain": {
           "viewType": "XML",
           "transition": "slide",
