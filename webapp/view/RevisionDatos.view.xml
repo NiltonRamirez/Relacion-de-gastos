@@ -5,8 +5,13 @@
     xmlns:core="sap.ui.core"
     xmlns:l="sap.ui.layout"
     xmlns:f="sap.ui.layout.form"
+    core:require="{
+        DateType: 'sap/ui/model/type/Date',
+        TimeType: 'sap/ui/model/type/Time',
+        FloatType: 'sap/ui/model/type/Float'
+    }"
     displayBlock="true">
-    <Page id="revisionDatosPage" title="{i18n>revisionTitle}" showNavButton="true" navButtonPress="onVolver">
+    <Page id="revisionDatosPage" title="{i18n>revisionTitle}" showNavButton="true" navButtonPress=".onVolver">
         <content>
             <VBox class="sapUiMediumMargin" busy="{vm>/cargando}" busyIndicatorDelay="0">
 
@@ -14,11 +19,11 @@
 
                 <!-- ============ NAVEGADOR ENTRE FACTURAS DEL LOTE ============ -->
                 <Toolbar class="sapUiSmallMarginBottom">
-                    <Button icon="sap-icon://navigation-left-arrow" text="{i18n>btnFacturaAnterior}" press="onFacturaAnterior" enabled="{= ${vm>/indiceActual} > 0 }"/>
+                    <Button icon="sap-icon://navigation-left-arrow" text="{i18n>btnFacturaAnterior}" press=".onFacturaAnterior" enabled="{= ${vm>/indiceActual} > 0 }"/>
                     <ToolbarSpacer/>
                     <Title text="{= ${i18n>revisionFacturaContador}.replace('{0}', ${vm>/indiceActual} + 1).replace('{1}', ${vm>/totalFacturas}) }" level="H4"/>
                     <ToolbarSpacer/>
-                    <Button icon="sap-icon://navigation-right-arrow" text="{i18n>btnFacturaSiguiente}" press="onFacturaSiguiente" enabled="{= ${vm>/indiceActual} + 1 &lt; ${vm>/totalFacturas} }"/>
+                    <Button icon="sap-icon://navigation-right-arrow" text="{i18n>btnFacturaSiguiente}" press=".onFacturaSiguiente" enabled="{= ${vm>/indiceActual} + 1 &lt; ${vm>/totalFacturas} }"/>
                 </Toolbar>
 
                 <!-- ============ CONTENEDOR ENLAZADO A LA FACTURA ACTUAL ============ -->
@@ -61,7 +66,7 @@
 
                                 <Label text="{i18n>lblFechaEmision}"/>
                                 <DatePicker
-                                    value="{path: 'gasto>fechaEmision', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
+                                    value="{path: 'gasto>fechaEmision', type: 'DateType', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
                                     displayFormat="dd/MM/yyyy"
                                     valueState="{ path: 'gasto>confianzaOCR/fechaEmision', formatter: '.formatter.confianzaAValueState' }"
                                     valueStateText="{i18n>avisoBajaConfianza}"
@@ -69,7 +74,7 @@
 
                                 <Label text="{i18n>lblHoraEmision}"/>
                                 <TimePicker
-                                    value="{path: 'gasto>horaEmision', type: 'sap.ui.model.type.Time', formatOptions: {source: {pattern: 'HH:mm'}, pattern: 'HH:mm'}}"
+                                    value="{path: 'gasto>horaEmision', type: 'TimeType', formatOptions: {source: {pattern: 'HH:mm'}, pattern: 'HH:mm'}}"
                                     displayFormat="HH:mm"
                                     valueState="{ path: 'gasto>confianzaOCR/horaEmision', formatter: '.formatter.confianzaAValueState' }"
                                     valueStateText="{i18n>avisoBajaConfianza}"
@@ -92,7 +97,7 @@
                                         valueStateText="{i18n>avisoBajaConfianza}"
                                         width="60%"
                                         class="sapUiTinyMarginEnd"/>
-                                    <Button text="{i18n>btnValidarDian}" press="onValidarNitDian" enabled="{= !${vm>/validandoDian} }"/>
+                                    <Button text="{i18n>btnValidarDian}" press=".onValidarNitDian" enabled="{= !${vm>/validandoDian} }"/>
                                     <core:Icon
                                         src="{ path: 'gasto>estadoDian', formatter: '.formatter.dianAIcono' }"
                                         color="{ path: 'gasto>estadoDian', formatter: '.formatter.dianAColor' }"
@@ -140,33 +145,33 @@
 
                                 <Label text="{i18n>lblSubtotal}"/>
                                 <Input
-                                    value="{path: 'gasto>subtotal', type: 'sap.ui.model.type.Float'}"
+                                    value="{path: 'gasto>subtotal', type: 'FloatType'}"
                                     type="Number"
-                                    change="onCambioSubtotal"
+                                    change=".onCambioSubtotal"
                                     valueState="{ path: 'gasto>confianzaOCR/subtotal', formatter: '.formatter.confianzaAValueState' }"
                                     valueStateText="{i18n>avisoBajaConfianza}"/>
 
                                 <Label text="{i18n>lblValorIva}"/>
                                 <Input
-                                    value="{path: 'gasto>valorIva', type: 'sap.ui.model.type.Float'}"
+                                    value="{path: 'gasto>valorIva', type: 'FloatType'}"
                                     type="Number"
-                                    change="onCambioTotales"/>
+                                    change=".onCambioTotales"/>
 
                                 <Label text="{i18n>lblImpuestosAdicionales}"/>
                                 <Input
-                                    value="{path: 'gasto>impuestosAdicionales', type: 'sap.ui.model.type.Float'}"
+                                    value="{path: 'gasto>impuestosAdicionales', type: 'FloatType'}"
                                     type="Number"
-                                    change="onCambioTotales"/>
+                                    change=".onCambioTotales"/>
 
                                 <Label text="{i18n>lblPropina}"/>
                                 <Input
-                                    value="{path: 'gasto>propina', type: 'sap.ui.model.type.Float'}"
+                                    value="{path: 'gasto>propina', type: 'FloatType'}"
                                     type="Number"
-                                    change="onCambioTotales"/>
+                                    change=".onCambioTotales"/>
 
                                 <Label text="{i18n>lblTotal}"/>
                                 <Input
-                                    value="{path: 'gasto>total', type: 'sap.ui.model.type.Float'}"
+                                    value="{path: 'gasto>total', type: 'FloatType'}"
                                     type="Number"
                                     editable="false"/>
 
@@ -187,7 +192,7 @@
                             <f:content>
 
                                 <Label text="{i18n>lblCategoriaGasto}"/>
-                                <Select selectedKey="{gasto>categoriaGasto}" change="onCambioCategoria" width="100%">
+                                <Select selectedKey="{gasto>categoriaGasto}" change=".onCambioCategoria" width="100%">
                                     <core:Item key="Hospedaje" text="{i18n>optHospedaje}"/>
                                     <core:Item key="Alimentacion" text="{i18n>optAlimentacion}"/>
                                     <core:Item key="Transporte" text="{i18n>optTransporte}"/>
@@ -200,7 +205,7 @@
                                         value="{gasto>descripcionConsumo}"
                                         rows="4"
                                         maxLength="500"
-                                        liveChange="onCambioDescripcion"
+                                        liveChange=".onCambioDescripcion"
                                         width="100%"/>
                                     <Text text="{= ${i18n>descripcionContador}.replace('{0}', (${gasto>descripcionConsumo} || '').length) }" class="sapUiTinyMarginTop"/>
                                 </VBox>
@@ -224,7 +229,7 @@
                     <Button
                         text="{i18n>btnGuardarBorrador}"
                         icon="sap-icon://save"
-                        press="onGuardarBorrador"
+                        press=".onGuardarBorrador"
                         width="50%"
                         enabled="{= !${vm>/guardando} }"
                         class="sapUiTinyMarginEnd"/>
@@ -232,7 +237,7 @@
                         text="{i18n>btnRegistrarGasto}"
                         type="Emphasized"
                         icon="sap-icon://accept"
-                        press="onRegistrarGasto"
+                        press=".onRegistrarGasto"
                         width="50%"
                         enabled="{= !${vm>/guardando} }"/>
                 </HBox>

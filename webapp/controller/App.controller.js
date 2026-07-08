@@ -6,11 +6,12 @@ sap.ui.define([
     return Controller.extend("com.ccb.viaticos.controller.App", {
 
         /**
-         * Inicialización de la vista raíz (shell de navegación)
+         * Inicialización de la vista raíz (shell de navegación).
+         * Aplica la clase de densidad de contenido (compact en escritorio,
+         * cozy en dispositivos táctiles) a toda la app.
          */
         onInit: function () {
-            // El shell no requiere lógica adicional; las vistas hijas
-            // gestionan su propio ciclo de vida mediante el router
+            this.getView().addStyleClass(this.getOwnerComponent().getContentDensityClass());
         }
     });
 });

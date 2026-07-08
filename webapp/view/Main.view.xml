@@ -23,17 +23,17 @@
 
                 <!-- ============ RESUMEN DEL MES ============ -->
                 <Panel headerText="{i18n>resumenTituloMes}" class="sapUiSmallMarginBottom">
-                    <l:Grid xmlns:l="sap.ui.layout" defaultSpan="L4 M4 S12">
+                    <l:Grid xmlns:l="sap.ui.layout" defaultSpan="XL4 L4 M4 S12" hSpacing="1" vSpacing="1">
                         <l:content>
-                            <VBox class="resumenTile">
+                            <VBox class="resumenTile" alignItems="Center">
                                 <ObjectNumber number="{ path: 'app>/resumenMes/totalGastado', formatter: '.formatter.formatoMonedaCOP' }" emphasized="true"/>
                                 <Text text="{i18n>resumenTotalGastado}"/>
                             </VBox>
-                            <VBox class="resumenTile">
+                            <VBox class="resumenTile" alignItems="Center">
                                 <ObjectNumber number="{app>/resumenMes/numeroGastos}" emphasized="true"/>
                                 <Text text="{i18n>resumenNumeroGastos}"/>
                             </VBox>
-                            <VBox class="resumenTile">
+                            <VBox class="resumenTile" alignItems="Center">
                                 <ObjectNumber number="{app>/resumenMes/pendientesAprobacion}" emphasized="true" state="Critical"/>
                                 <Text text="{i18n>resumenPendientesAprobacion}"/>
                             </VBox>
@@ -42,32 +42,46 @@
                 </Panel>
 
                 <!-- ============ TARJETAS DE ACCESO RÁPIDO ============ -->
+                <!-- Cada tile ocupa 2 columnas x 2 filas de 5.25rem (tamaño estándar
+                     de GenericTile en Horizon) para que el grid no las superponga -->
                 <f:GridContainer>
                     <f:layout>
-                        <f:GridContainerSettings rowSize="9rem" columnSize="9rem" gap="1rem"/>
+                        <f:GridContainerSettings rowSize="5.25rem" columnSize="5.25rem" gap="1rem"/>
                     </f:layout>
                     <f:items>
 
-                        <GenericTile class="dashboardCard" press="onAbrirRegistrarGasto" header="{i18n>cardRegistrarGasto}" subheader="{i18n>cardRegistrarGastoDesc}">
+                        <GenericTile class="dashboardCard" press=".onAbrirRegistrarGasto" header="{i18n>cardRegistrarGasto}" subheader="{i18n>cardRegistrarGastoDesc}">
+                            <layoutData>
+                                <f:GridContainerItemLayoutData columns="2" minRows="2"/>
+                            </layoutData>
                             <TileContent>
                                 <ImageContent src="sap-icon://add-document"/>
                             </TileContent>
                         </GenericTile>
 
-                        <GenericTile class="dashboardCard" press="onAbrirMisGastos" header="{i18n>cardMisGastos}" subheader="{i18n>cardMisGastosDesc}">
+                        <GenericTile class="dashboardCard" press=".onAbrirMisGastos" header="{i18n>cardMisGastos}" subheader="{i18n>cardMisGastosDesc}">
+                            <layoutData>
+                                <f:GridContainerItemLayoutData columns="2" minRows="2"/>
+                            </layoutData>
                             <TileContent>
                                 <ImageContent src="sap-icon://list"/>
                             </TileContent>
                         </GenericTile>
 
-                        <GenericTile class="dashboardCard" press="onAbrirMisGastos" header="{i18n>cardConsultarEstados}" subheader="{i18n>cardConsultarEstadosDesc}">
+                        <GenericTile class="dashboardCard" press=".onAbrirMisGastos" header="{i18n>cardConsultarEstados}" subheader="{i18n>cardConsultarEstadosDesc}">
+                            <layoutData>
+                                <f:GridContainerItemLayoutData columns="2" minRows="2"/>
+                            </layoutData>
                             <TileContent>
                                 <ImageContent src="sap-icon://status-in-process"/>
                             </TileContent>
                         </GenericTile>
 
                         <!-- Tarjeta visible solo para el rol Analista financiero -->
-                        <GenericTile class="dashboardCard" press="onAbrirRevisionPendiente" header="{i18n>cardRevisionPendiente}" subheader="{i18n>cardRevisionPendienteDesc}" visible="{app>/esAnalista}">
+                        <GenericTile class="dashboardCard" press=".onAbrirRevisionPendiente" header="{i18n>cardRevisionPendiente}" subheader="{i18n>cardRevisionPendienteDesc}" visible="{app>/esAnalista}">
+                            <layoutData>
+                                <f:GridContainerItemLayoutData columns="2" minRows="2"/>
+                            </layoutData>
                             <TileContent unit="">
                                 <NumericContent value="{app>/resumenMes/pendientesAprobacion}" icon="sap-icon://approvals" withMargin="false"/>
                             </TileContent>

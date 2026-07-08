@@ -85,6 +85,18 @@ sap.ui.define([
         },
 
         /**
+         * Determina la clase de densidad de contenido según el dispositivo:
+         * compacto para escritorio (mouse) y cozy para dispositivos táctiles
+         * @returns {string} clase CSS de densidad ("sapUiSizeCompact" | "sapUiSizeCozy")
+         */
+        getContentDensityClass: function () {
+            if (this._sContentDensityClass === undefined) {
+                this._sContentDensityClass = Device.support.touch ? "sapUiSizeCozy" : "sapUiSizeCompact";
+            }
+            return this._sContentDensityClass;
+        },
+
+        /**
          * Registra listeners de "online"/"offline" para reflejar el estado
          * de conectividad en el modelo "app" y disparar sincronización
          * @private

@@ -5,7 +5,7 @@
     xmlns:core="sap.ui.core"
     xmlns:u="sap.ui.unified"
     displayBlock="true">
-    <Page id="cargaPCPage" title="{i18n>cargaPCTitle}" showNavButton="true" navButtonPress="onVolver">
+    <Page id="cargaPCPage" title="{i18n>cargaPCTitle}" showNavButton="true" navButtonPress=".onVolver">
         <content>
             <VBox class="sapUiMediumMargin">
 
@@ -14,7 +14,7 @@
 
                     <core:HTML id="dropZoneHtml"
                         content="&lt;div id='zonaDropArchivo' class='dropZone'&gt;&lt;/div&gt;"
-                        afterRendering="onDropZoneRenderizada"/>
+                        afterRendering=".onDropZoneRenderizada"/>
 
                     <VBox alignItems="Center" class="sapUiSmallMarginTop">
                         <core:Icon src="sap-icon://upload-to-cloud" size="2.5rem" class="sapUiSmallMarginBottom"/>
@@ -30,14 +30,14 @@
                         multiple="true"
                         fileType="pdf,xml"
                         mimeType="application/pdf,text/xml,application/xml"
-                        change="onArchivosSeleccionados"/>
+                        change=".onArchivosSeleccionados"/>
 
                     <Button
                         id="btnSeleccionarArchivo"
                         text="{i18n>btnSeleccionarArchivo}"
                         type="Emphasized"
                         icon="sap-icon://attachment"
-                        press="onAbrirSelectorArchivo"
+                        press=".onAbrirSelectorArchivo"
                         class="sapUiMediumMarginTop"/>
 
                     <!-- Lista de archivos seleccionados -->
@@ -52,7 +52,7 @@
                                         <ObjectStatus text="{vm>nombreArchivo}" icon="sap-icon://document" state="None"/>
                                         <Text text="{vm>tamanoArchivo}"/>
                                     </VBox>
-                                    <Button icon="sap-icon://delete" type="Transparent" press="onEliminarArchivo"/>
+                                    <Button icon="sap-icon://delete" type="Transparent" press=".onEliminarArchivo"/>
                                 </HBox>
                             </CustomListItem>
                         </List>
@@ -78,7 +78,7 @@
                         text="{i18n>btnCargarFacturas}"
                         type="Emphasized"
                         icon="sap-icon://upload-to-cloud"
-                        press="onCargarFacturas"
+                        press=".onCargarFacturas"
                         enabled="{= ${vm>/archivos}.length > 0 &amp;&amp; !${vm>/subiendo} }"
                         width="100%"
                         class="sapUiMediumMarginTop"/>

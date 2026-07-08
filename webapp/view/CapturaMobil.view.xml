@@ -4,7 +4,7 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:core="sap.ui.core"
     displayBlock="true">
-    <Page id="capturaMobilPage" title="{i18n>capturaTitle}" showNavButton="true" navButtonPress="onVolver">
+    <Page id="capturaMobilPage" title="{i18n>capturaTitle}" showNavButton="true" navButtonPress=".onVolver">
         <content>
             <VBox class="sapUiMediumMargin" alignItems="Center">
 
@@ -22,7 +22,7 @@
                         text="{i18n>btnCapturarCamara}"
                         type="Emphasized"
                         icon="sap-icon://camera"
-                        press="onCapturarFoto"
+                        press=".onCapturarFoto"
                         width="100%"
                         class="sapUiSmallMarginBottom"/>
 
@@ -34,8 +34,8 @@
                         class="sapUiSmallMarginBottom"/>
 
                     <!-- Permite cancelar la captura y volver a la galería si ya hay facturas -->
-                    <Link text="{i18n>btnCerrar}" press="onCancelarCaptura" visible="{= ${vm>/facturas}.length > 0 }" class="sapUiTinyMarginBottom"/>
-                    <Link text="{i18n>btnUsarArchivoInstead}" press="onUsarArchivo"/>
+                    <Link text="{i18n>btnCerrar}" press=".onCancelarCaptura" visible="{= ${vm>/facturas}.length > 0 }" class="sapUiTinyMarginBottom"/>
+                    <Link text="{i18n>btnUsarArchivoInstead}" press=".onUsarArchivo"/>
                 </VBox>
 
                 <!-- ============ ESTADO: VISTA PREVIA DE IMAGEN CAPTURADA ============ -->
@@ -63,7 +63,7 @@
                         <Button
                             text="{i18n>btnReintentar}"
                             icon="sap-icon://camera"
-                            press="onReintentar"
+                            press=".onReintentar"
                             width="50%"
                             class="sapUiTinyMarginEnd"/>
                         <Button
@@ -71,7 +71,7 @@
                             type="Emphasized"
                             icon="sap-icon://accept"
                             enabled="{vm>/calidadBuena}"
-                            press="onUsarImagen"
+                            press=".onUsarImagen"
                             width="50%"/>
                     </HBox>
                 </VBox>
@@ -87,7 +87,7 @@
                                     <core:HTML content="{vm>htmlThumbnail}"/>
                                     <Text text="{vm>nombreArchivo}" class="sapUiTinyMarginBegin"/>
                                 </HBox>
-                                <Button icon="sap-icon://delete" type="Transparent" press="onEliminarFactura"/>
+                                <Button icon="sap-icon://delete" type="Transparent" press=".onEliminarFactura"/>
                             </HBox>
                         </CustomListItem>
                     </List>
@@ -102,7 +102,7 @@
                     <Button
                         text="{i18n>btnAgregarOtra}"
                         icon="sap-icon://add"
-                        press="onAgregarOtra"
+                        press=".onAgregarOtra"
                         width="100%"
                         class="sapUiSmallMarginBottom"/>
 
@@ -110,7 +110,7 @@
                         text="{i18n>btnContinuarLote}"
                         type="Emphasized"
                         icon="sap-icon://arrow-right"
-                        press="onContinuarLote"
+                        press=".onContinuarLote"
                         enabled="{= ${vm>/facturas}.length > 0 }"
                         width="100%"/>
                 </VBox>

@@ -4,8 +4,11 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:core="sap.ui.core"
     xmlns:f="sap.ui.layout.form"
+    core:require="{
+        DateType: 'sap/ui/model/type/Date'
+    }"
     displayBlock="true">
-    <Page id="listaGastosPage" title="{i18n>listaGastosTitle}" showNavButton="true" navButtonPress="onVolver">
+    <Page id="listaGastosPage" title="{i18n>listaGastosTitle}" showNavButton="true" navButtonPress=".onVolver">
         <content>
             <VBox class="sapUiMediumMargin" busy="{vm>/cargando}" busyIndicatorDelay="0">
 
@@ -16,13 +19,13 @@
 
                             <Label text="{i18n>filtroFechaDesde}"/>
                             <DatePicker
-                                value="{path: 'vm>/filtros/fechaDesde', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
+                                value="{path: 'vm>/filtros/fechaDesde', type: 'DateType', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
                                 displayFormat="dd/MM/yyyy"
                                 width="100%"/>
 
                             <Label text="{i18n>filtroFechaHasta}"/>
                             <DatePicker
-                                value="{path: 'vm>/filtros/fechaHasta', type: 'sap.ui.model.type.Date', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
+                                value="{path: 'vm>/filtros/fechaHasta', type: 'DateType', formatOptions: {source: {pattern: 'yyyy-MM-dd'}, pattern: 'dd/MM/yyyy'}}"
                                 displayFormat="dd/MM/yyyy"
                                 width="100%"/>
 
@@ -54,8 +57,8 @@
                     </f:SimpleForm>
 
                     <HBox class="sapUiSmallMargin">
-                        <Button text="{i18n>btnAplicarFiltros}" type="Emphasized" icon="sap-icon://filter" press="onAplicarFiltros" class="sapUiTinyMarginEnd"/>
-                        <Button text="{i18n>btnLimpiarFiltros}" icon="sap-icon://clear-filter" press="onLimpiarFiltros"/>
+                        <Button text="{i18n>btnAplicarFiltros}" type="Emphasized" icon="sap-icon://filter" press=".onAplicarFiltros" class="sapUiTinyMarginEnd"/>
+                        <Button text="{i18n>btnLimpiarFiltros}" icon="sap-icon://clear-filter" press=".onLimpiarFiltros"/>
                     </HBox>
                 </Panel>
 
@@ -74,7 +77,7 @@
                         <Column><Text text="{i18n>colEstado}"/></Column>
                     </columns>
                     <items>
-                        <ColumnListItem type="Navigation" press="onAbrirDetalle">
+                        <ColumnListItem type="Navigation" press=".onAbrirDetalle">
                             <cells>
                                 <Text text="{ path: 'vm>fechaEmision', formatter: '.formatter.formatoFechaCO' }"/>
                                 <Text text="{vm>nombreEstablecimiento}"/>
@@ -146,13 +149,13 @@
                     </VBox>
                 </content>
                 <buttons>
-                    <Button text="{i18n>btnDescargarFactura}" icon="sap-icon://download" press="onDescargarFactura"/>
+                    <Button text="{i18n>btnDescargarFactura}" icon="sap-icon://download" press=".onDescargarFactura"/>
 
                     <!-- Botones de aprobación visibles solo para analistas financieros -->
-                    <Button text="{i18n>btnAprobar}" type="Accept" icon="sap-icon://accept" press="onAprobarGasto" visible="{app>/esAnalista}"/>
-                    <Button text="{i18n>btnRechazar}" type="Reject" icon="sap-icon://decline" press="onRechazarGasto" visible="{app>/esAnalista}"/>
+                    <Button text="{i18n>btnAprobar}" type="Accept" icon="sap-icon://accept" press=".onAprobarGasto" visible="{app>/esAnalista}"/>
+                    <Button text="{i18n>btnRechazar}" type="Reject" icon="sap-icon://decline" press=".onRechazarGasto" visible="{app>/esAnalista}"/>
 
-                    <Button text="{i18n>btnCerrar}" press="onCerrarDetalle"/>
+                    <Button text="{i18n>btnCerrar}" press=".onCerrarDetalle"/>
                 </buttons>
             </Dialog>
         </dependents>

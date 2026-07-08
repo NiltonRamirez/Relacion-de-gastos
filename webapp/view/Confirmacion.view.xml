@@ -55,13 +55,13 @@
                         text="{i18n>btnRegistrarOtro}"
                         type="Emphasized"
                         icon="sap-icon://add-document"
-                        press="onRegistrarOtro"
+                        press=".onRegistrarOtro"
                         width="50%"
                         class="sapUiTinyMarginEnd"/>
                     <Button
                         text="{i18n>btnVerMisGastos}"
                         icon="sap-icon://list"
-                        press="onVerMisGastos"
+                        press=".onVerMisGastos"
                         width="50%"/>
                 </HBox>
 
