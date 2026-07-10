@@ -15,7 +15,11 @@ sap.ui.define([
      * y este servicio no maneja tokens propios.
      *
      * Endpoints expuestos por CPI (rutas relativas a /http/):
-     *   GET  /api/v1/usuarios/me                  (datos del usuario autenticado por IAS)
+     *   GET  /api/v1/users/by-email?email=...      (datos del colaborador según el correo
+     *                                              del usuario logueado en el launchpad;
+     *                                              respuesta { status, data: { employeeId,
+     *                                              email, nombreCompleto?, rol?,
+     *                                              sourceSystem } })
      *   POST /api/v1/facturas/capturar           (multipart/form-data - una o varias imágenes de cámara,
      *                                              campo "archivos" repetido; respuesta: arreglo "jobs")
      *   POST /api/v1/facturas/cargar              (multipart/form-data - uno o varios PDF / XML,
@@ -41,6 +45,16 @@ sap.ui.define([
             // sap.ui.require.toUrl incluye el prefijo del HTML5 repo automáticamente en Work Zone
             this._sBaseUrl = sap.ui.require.toUrl("com/ccb/viaticos") + "/http";
             this._sCsrfToken = null;
+            this._sEmailUsuario = null;
+        },
+
+        /**
+         * Registra el correo del usuario logueado en el launchpad; se usa
+         * para la obtención del token CSRF contra el endpoint de usuario
+         * @param {string} sEmail - correo del usuario autenticado por IAS
+         */
+        setEmailUsuario: function (sEmail) {
+            this._sEmailUsuario = sEmail;
         },
 
         /**
@@ -71,7 +85,9 @@ sap.ui.define([
             if (this._sCsrfToken) {
                 return Promise.resolve(this._sCsrfToken);
             }
-            return fetch(this._sBaseUrl + "/api/v1/usuarios/me", {
+            var sRuta = "/api/v1/users/by-email" +
+                (this._sEmailUsuario ? "?email=" + encodeURIComponent(this._sEmailUsuario) : "");
+            return fetch(this._sBaseUrl + sRuta, {
                 method: "GET",
                 headers: Object.assign(this._construirHeaders(), { "X-CSRF-Token": "Fetch" })
             }).then(function (oRespuesta) {
@@ -192,9 +208,6 @@ sap.ui.define([
          * @private
          */
         _procesarRespuesta: function (oRespuesta) {
-            if (oRespuesta.status === 401) {
-                return Promise.reject({ status: 401, message: "errorSesionExpirada" });
-            }
             return oRespuesta.text().then(function (sTexto) {
                 var oData = {};
                 try {
@@ -205,11 +218,39 @@ sap.ui.define([
                 if (!oRespuesta.ok) {
                     return Promise.reject({
                         status: oRespuesta.status,
-                        message: oData.mensaje || oData.message || "Error en la solicitud"
+                        message: this._extraerMensajeError(oData),
+                        detalles: this._extraerDetallesError(oData)
                     });
                 }
                 return oData;
-            });
+            }.bind(this));
+        },
+
+        /**
+         * Extrae el mensaje de error de la respuesta, soportando tanto el
+         * formato OData ({ error: { message: { value } } }) como el formato
+         * plano ({ mensaje } / { message })
+         * @param {object} oData - cuerpo de la respuesta de error
+         * @returns {string} mensaje legible para el usuario
+         * @private
+         */
+        _extraerMensajeError: function (oData) {
+            if (oData && oData.error && oData.error.message) {
+                return oData.error.message.value || oData.error.message;
+            }
+            return (oData && (oData.mensaje || oData.message)) || "Error en la solicitud";
+        },
+
+        /**
+         * Extrae los detalles del error del formato OData
+         * ({ error: { innererror: { errordetails: [...] } } })
+         * @param {object} oData - cuerpo de la respuesta de error
+         * @returns {Array<object>} detalles del error (puede ser vacío)
+         * @private
+         */
+        _extraerDetallesError: function (oData) {
+            return (oData && oData.error && oData.error.innererror &&
+                oData.error.innererror.errordetails) || [];
         }
     });
 });

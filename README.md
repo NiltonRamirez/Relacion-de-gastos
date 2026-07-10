@@ -42,8 +42,18 @@ webapp/
 
 - **Autenticación externa vía IAS**: la app no tiene pantalla de login ni maneja
   credenciales/tokens propios. El approuter establece la sesión autenticada con IAS
-  antes de servir la app; el `Component` obtiene los datos del usuario con
-  `GET /api/v1/usuarios/me` y publica `usuario` y `esAnalista` en el modelo `app`.
+  antes de servir la app. El `Component` identifica al usuario logueado en el
+  launchpad de Work Zone con el servicio estándar `UserInfo` de la shell
+  (`sap/ushell/Container`), del que toma el **correo y el nombre completo**, y
+  consulta sus datos de colaborador con `GET /api/v1/users/by-email?email=...`
+  (respuesta `{ status, data: { employeeId, email, nombreCompleto?, rol?,
+  sourceSystem } }`). Los datos del backend se combinan con los del launchpad
+  (el nombre del launchpad es el respaldo si el backend no envía `nombreCompleto`)
+  y se publican como `usuario` y `esAnalista` en el modelo `app`. El rol de
+  analista se reconoce si `rol` contiene "analista" (sin distinguir mayúsculas).
+  Si el backend responde 401 (usuario no existe en la base de colaboradores
+  activos), se muestra el mensaje de error devuelto (formato OData
+  `error.message.value`).
 - **`ApiService`** — wrapper sobre `fetch`/`XMLHttpRequest`:
   - Las peticiones viajan con la sesión establecida por la plataforma (IAS/approuter).
   - Obtiene y cachea un token CSRF (`X-CSRF-Token: Fetch`) antes de cualquier POST.
@@ -119,9 +129,10 @@ Todos los endpoints de backend consumidos están documentados en el encabezado d
   tiene módulo de login propio.
 - **Autorización**: `xs-security.json` define dos scopes (`User`, `Analyst`) y dos
   role collections desplegables (`ViaticosEmpleado`, `ViaticosAnalistaFinanciero`). El
-  rol se refleja en el front únicamente vía `app>/esAnalista` (basado en
-  `usuario.rol` devuelto por `GET /api/v1/usuarios/me`), **no hay chequeo de scopes
-  XSUAA en el cliente** — la autorización real debe reforzarse en CPI/backend.
+  rol se refleja en el front únicamente vía `app>/esAnalista` (basado en el campo
+  `rol` si el backend lo incluye en `GET /api/v1/users/by-email`), **no hay chequeo
+  de scopes XSUAA en el cliente** — la autorización real debe reforzarse en
+  CPI/backend.
 
 ## 5. Cómo ejecutar y desplegar
 

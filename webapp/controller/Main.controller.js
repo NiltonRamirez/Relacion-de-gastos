@@ -21,7 +21,7 @@ sap.ui.define([
 
         /**
          * Se ejecuta al navegar al Dashboard: refresca el resumen mensual.
-         * El usuario y su rol los carga el Component desde /api/v1/usuarios/me
+         * El usuario lo carga el Component desde /api/v1/users/by-email
          * (autenticación externa vía IAS).
          * @private
          */

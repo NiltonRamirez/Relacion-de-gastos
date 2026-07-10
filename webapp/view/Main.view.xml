@@ -9,7 +9,7 @@
             <VBox class="sapUiMediumMargin">
 
                 <!-- Saludo al usuario -->
-                <Title text="{= ${i18n>dashboardBienvenida}.replace('{0}', ${app>/usuario/nombreCompleto} || '') }"
+                <Title text="{= ${i18n>dashboardBienvenida}.replace('{0}', ${app>/usuario/nombreCompleto} || ${app>/usuario/email} || '') }"
                        level="H2"
                        class="sapUiSmallMarginBottom"/>
 
